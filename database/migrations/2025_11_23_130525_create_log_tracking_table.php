@@ -12,7 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('log_tracking', function (Blueprint $table) {
-            $table->id();
+            $table->id(); // id_log
+            $table->foreignId('id_surat')
+                ->constrained('surat_masuk')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+            $table->foreignId('id_user')
+                ->constrained('users')
+                ->cascadeOnUpdate()
+                ->restrictOnDelete();
+            $table->string('aksi', 50); // input, disposisi, baca, selesai, arsip, dll
+            $table->timestamp('waktu_aksi')->useCurrent();
+            $table->text('keterangan')->nullable();
             $table->timestamps();
         });
     }

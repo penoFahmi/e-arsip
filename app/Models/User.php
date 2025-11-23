@@ -20,8 +20,13 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
+        'jabatan',
+        'no_hp',
+        'role',
+        'status_aktif',
     ];
 
     /**
@@ -47,6 +52,32 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'status_aktif' => 'boolean',
         ];
+    }
+
+    public function suratMasukDiinput()
+    {
+        return $this->hasMany(SuratMasuk::class, 'id_user_input');
+    }
+
+    public function disposisiDari()
+    {
+        return $this->hasMany(Disposisi::class, 'dari_user_id');
+    }
+
+    public function disposisiKe()
+    {
+        return $this->hasMany(Disposisi::class, 'ke_user_id');
+    }
+
+    public function logTrackings()
+    {
+        return $this->hasMany(LogTracking::class, 'id_user');
+    }
+
+    public function agendaTanggungJawab()
+    {
+        return $this->hasMany(Agenda::class, 'penanggung_jawab');
     }
 }

@@ -12,7 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('surat_masuk', function (Blueprint $table) {
-            $table->id();
+            $table->id(); // id_surat
+            $table->string('no_surat')->unique();
+            $table->date('tgl_surat')->nullable();
+            $table->date('tgl_terima')->nullable();
+            $table->string('pengirim');
+            $table->string('perihal');
+            $table->text('ringkasan')->nullable();
+            $table->enum('sifat_surat', ['biasa', 'penting', 'rahasia'])->default('biasa');
+            $table->enum('media', ['fisik', 'digital'])->default('fisik');
+            $table->foreignId('id_user_input')
+                ->constrained('users')
+                ->cascadeOnUpdate()
+                ->restrictOnDelete();
+            $table->enum('status_surat', ['baru', 'didisposisi', 'selesai', 'arsip'])
+                ->default('baru');
             $table->timestamps();
         });
     }
