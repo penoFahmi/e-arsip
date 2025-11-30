@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
+use Illuminate\Auth\Notifications\VerifyEmail; // Import notifikasi
+use Illuminate\Notifications\Messages\MailMessage; // Import pesan mail
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -31,6 +33,12 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+        // 1. Tampilan Halaman "Please Verify Your Email"
+        Fortify::verifyEmailView(function () {
+            return Inertia::render('auth/verify-email', [
+                'status' => session('status'),
+            ]);
+        });
     }
 
     /**

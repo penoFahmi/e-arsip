@@ -13,15 +13,33 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+
+            // --- Identitas Dasar ---
             $table->string('name');
             $table->string('username')->unique();
             $table->string('email')->nullable()->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('jabatan')->nullable();
+
+            // --- Struktur Organisasi ---
+            $table->string('jabatan')->nullable(); // Contoh: "Kasubbag Umum", "Staff IT"
+
+            // PENTING: Menghubungkan user ke tabel 'bidang' (Dibuat nanti)
+            // Kita pakai unsignedBigInteger dulu agar tidak error jika tabel bidang belum dibuat
+            // Jika null, berarti dia user tingkat instansi (Sekretariat/Super Admin)
+            $table->unsignedBigInteger('id_bidang')->nullable()->index();
+
+            // --- Hak Akses (Role) ---
+            // super_admin  : Sekretariat (Bisa ganti Logo, Tambah User, Lihat Semua)
+            // admin_bidang : Admin per bagian (Misal: Admin Anggaran)
+            // pimpinan     : Kepala Dinas / Kabid (Mode baca & disposisi)
+            // staf         : Input & proses surat biasa
+            $table->enum('role', ['super_admin', 'admin_bidang', 'pimpinan', 'staf'])
+                ->default('staf');
+
             $table->string('no_hp', 20)->nullable();
-            $table->enum('role', ['admin', 'pimpinan', 'staf'])->default('staf');
             $table->boolean('status_aktif')->default(true);
+
             $table->rememberToken();
             $table->timestamps();
         });
