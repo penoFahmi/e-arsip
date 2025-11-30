@@ -5,6 +5,8 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\SetupController;
 use App\Http\Middleware\ForceChangeDefaultEmail;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\AppSettingController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -40,6 +42,10 @@ Route::middleware(['auth'])->group(function () {
             require __DIR__.'/settings.php';
 
             // Nanti route surat_masuk, disposisi, dll taruh sini juga
+            Route::resource('users', UserController::class);
+            Route::resource('settings/app', AppSettingController::class);
+            
+
         });
 
     });
