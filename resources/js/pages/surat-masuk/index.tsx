@@ -1,7 +1,7 @@
 import { useState, FormEventHandler } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import { PageProps, BreadcrumbItem } from '@/types';
-import { Plus, Search, Pencil, Trash2, Eye, FileText, Calendar, Paperclip } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Eye, FileText, Calendar, Paperclip, Send } from 'lucide-react';
 
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,12 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog';
 
+interface UserLite {
+    id: number;
+    name: string;
+    jabatan: string;
+    id_bidang: number;
+}
 interface FileScan {
     id: number;
     nama_file: string;
@@ -39,15 +45,21 @@ interface SuratData {
 
 interface Props extends PageProps {
     surats: { data: SuratData[]; links: any[] };
+    users: UserLite[];
     filters: { search: string };
 }
 
-export default function SuratMasukIndex({ surats, filters }: Props) {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+export default function SuratMasukIndex({ surats, users, filters }: Props) {
+    // State untuk modal input/edit surat
+    const [isSuratModalOpen, setisSuratModalOpen] = useState(false);
     const [editingSurat, setEditingSurat] = useState<SuratData | null>(null);
+    // State untuk pencarian
     const [search, setSearch] = useState(filters.search || '');
+    //State disposisi
+    const [isDisposisiModalOpen, setIsDisposisiModalOpen] = useState(false);
+    const [selectedSuratForDisposisi, setSelectedSuratForDisposisi] = useState<SuratData | null>(null);
 
-    const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
+    const suratForm= useForm({
         no_surat: '',
         tgl_surat: '',
         tgl_terima: new Date().toISOString().split('T')[0],
@@ -59,22 +71,30 @@ export default function SuratMasukIndex({ surats, filters }: Props) {
         file_scan: null as File | null,
     });
 
+    const disposisiForm = useForm({
+        id_surat: '',
+        ke_user_id: '',
+        instruksi: '',
+        batas_waktu: '',
+        catatan: '',
+    });
+
     const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             router.get('/surat-masuk', { search }, { preserveState: true });
         }
     };
 
-    const openCreateModal = () => {
+    const openCreateSurat = () => {
         setEditingSurat(null);
-        reset();
-        clearErrors();
-        setIsModalOpen(true);
+        suratForm.reset();
+        suratForm.clearErrors();
+        setisSuratModalOpen(true);
     };
 
-    const openEditModal = (surat: SuratData) => {
+    const openEditSurat = (surat: SuratData) => {
         setEditingSurat(surat);
-        setData({
+        suratForm.setData({
             no_surat: surat.no_surat,
             tgl_surat: surat.tgl_surat,
             tgl_terima: surat.tgl_terima,
@@ -85,24 +105,24 @@ export default function SuratMasukIndex({ surats, filters }: Props) {
             media: surat.media as any,
             file_scan: null, // Reset input file agar user upload ulang jika mau
         });
-        clearErrors();
-        setIsModalOpen(true);
+        suratForm.clearErrors();
+        setisSuratModalOpen(true);
     };
 
-    const submit: FormEventHandler = (e) => {
+    const submitSurat: FormEventHandler = (e) => {
         e.preventDefault();
         // ForceFormData penting untuk upload file
-        const options = { onSuccess: () => setIsModalOpen(false), forceFormData: true };
+        const options = { onSuccess: () => setisSuratModalOpen(false), forceFormData: true };
 
         if (editingSurat) {
             // PENTING: Untuk update file di Laravel/Inertia, gunakan POST dengan _method: 'put'
             router.post(`/surat-masuk/${editingSurat.id}`, {
                 _method: 'put',
-                ...data,
+                ...suratForm.data,
                 // file_scan akan otomatis terkirim jika ada isinya
             }, options);
         } else {
-            post('/surat-masuk', options);
+            suratForm.post('/surat-masuk', options);
         }
     };
 
@@ -110,6 +130,21 @@ export default function SuratMasukIndex({ surats, filters }: Props) {
         if (confirm('Yakin hapus surat ini? File scan fisik juga akan dihapus permanen dari server.')) {
             router.delete(`/surat-masuk/${id}`);
         }
+    };
+
+    const openDisposisi = (surat: SuratData) => {
+        setSelectedSuratForDisposisi(surat);
+        disposisiForm.reset();
+        disposisiForm.setData('id_surat', String(surat.id));
+        disposisiForm.clearErrors();
+        setIsDisposisiModalOpen(true);
+    };
+
+    const submitDisposisi: FormEventHandler = (e) => {
+        e.preventDefault();
+        disposisiForm.post('/disposisi', {
+            onSuccess: () => setIsDisposisiModalOpen(false),
+        });
     };
 
     const getBadgeColor = (sifat: string) => {
@@ -146,7 +181,7 @@ export default function SuratMasukIndex({ surats, filters }: Props) {
                             />
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         </div>
-                        <Button onClick={openCreateModal}>
+                        <Button onClick={openCreateSurat}>
                             <Plus className="h-4 w-4 mr-2" /> Input Surat
                         </Button>
                     </div>
@@ -199,7 +234,10 @@ export default function SuratMasukIndex({ surats, filters }: Props) {
                                     </td>
                                     <td className="px-6 py-4 align-top text-right">
                                         <div className="flex justify-end gap-2">
-                                            <Button variant="ghost" size="icon" onClick={() => openEditModal(surat)}>
+                                            <Button variant="outline" size="icon" onClick={() => openDisposisi(surat)} title="Disposisi Surat Ini">
+                                                <Send className="h-4 w-4 text-blue-600" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" onClick={() => openEditSurat(surat)}>
                                                 <Pencil className="h-4 w-4 text-muted-foreground" />
                                             </Button>
                                             <Button variant="ghost" size="icon" onClick={() => deleteSurat(surat.id)}>
@@ -217,8 +255,8 @@ export default function SuratMasukIndex({ surats, filters }: Props) {
                 </div>
             </div>
 
-            {/* Modal */}
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            {/* Modal Surat Masuk */}
+            <Dialog open={isSuratModalOpen} onOpenChange={setisSuratModalOpen}>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>{editingSurat ? 'Edit Surat' : 'Input Surat Masuk'}</DialogTitle>
@@ -227,28 +265,28 @@ export default function SuratMasukIndex({ surats, filters }: Props) {
                         </DialogDescription>
                     </DialogHeader>
 
-                    <form onSubmit={submit} className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                    <form onSubmit={submitSurat} className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
 
                         <div className="space-y-3">
                             <div className="space-y-1">
                                 <Label htmlFor="no_surat">Nomor Surat</Label>
-                                <Input id="no_surat" value={data.no_surat} onChange={e => setData('no_surat', e.target.value)} required placeholder="Misal: 400.1/123/SETDA" />
-                                <InputError message={errors.no_surat} />
+                                <Input id="no_surat" value={suratForm.data.no_surat} onChange={e => suratForm.setData('no_surat', e.target.value)} required placeholder="Misal: 400.1/123/SETDA" />
+                                <InputError message={suratForm.errors.no_surat} />
                             </div>
                             <div className="space-y-1">
                                 <Label htmlFor="pengirim">Pengirim / Asal Surat</Label>
-                                <Input id="pengirim" value={data.pengirim} onChange={e => setData('pengirim', e.target.value)} required placeholder="Misal: Dinas Kesehatan" />
-                                <InputError message={errors.pengirim} />
+                                <Input id="pengirim" value={suratForm.data.pengirim} onChange={e => suratForm.setData('pengirim', e.target.value)} required placeholder="Misal: Dinas Kesehatan" />
+                                <InputError message={suratForm.errors.pengirim} />
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="space-y-1">
                                     <Label>Tgl. Surat</Label>
-                                    <Input type="date" value={data.tgl_surat} onChange={e => setData('tgl_surat', e.target.value)} required />
-                                    <InputError message={errors.tgl_surat} />
+                                    <Input type="date" value={suratForm.data.tgl_surat} onChange={e => suratForm.setData('tgl_surat', e.target.value)} required />
+                                    <InputError message={suratForm.errors.tgl_surat} />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Tgl. Diterima</Label>
-                                    <Input type="date" value={data.tgl_terima} onChange={e => setData('tgl_terima', e.target.value)} required />
+                                    <Input type="date" value={suratForm.data.tgl_terima} onChange={e => suratForm.setData('tgl_terima', e.target.value)} required />
                                 </div>
                             </div>
                         </div>
@@ -256,8 +294,8 @@ export default function SuratMasukIndex({ surats, filters }: Props) {
                         <div className="space-y-3">
                             <div className="space-y-1">
                                 <Label htmlFor="perihal">Perihal</Label>
-                                <Input id="perihal" value={data.perihal} onChange={e => setData('perihal', e.target.value)} required placeholder="Inti isi surat..." />
-                                <InputError message={errors.perihal} />
+                                <Input id="perihal" value={suratForm.data.perihal} onChange={e => suratForm.setData('perihal', e.target.value)} required placeholder="Inti isi surat..." />
+                                <InputError message={suratForm.errors.perihal} />
                             </div>
 
                             <div className="grid grid-cols-2 gap-2">
@@ -265,8 +303,8 @@ export default function SuratMasukIndex({ surats, filters }: Props) {
                                     <Label>Sifat Surat</Label>
                                     <select
                                         className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                        value={data.sifat_surat}
-                                        onChange={e => setData('sifat_surat', e.target.value as any)}
+                                        value={suratForm.data.sifat_surat}
+                                        onChange={e => suratForm.setData('sifat_surat', e.target.value as any)}
                                     >
                                         <option value="biasa">Biasa</option>
                                         <option value="penting">Penting</option>
@@ -277,8 +315,8 @@ export default function SuratMasukIndex({ surats, filters }: Props) {
                                     <Label>Media</Label>
                                     <select
                                         className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                        value={data.media}
-                                        onChange={e => setData('media', e.target.value as any)}
+                                        value={suratForm.data.media}
+                                        onChange={e => suratForm.setData('media', e.target.value as any)}
                                     >
                                         <option value="fisik">Fisik (Kertas)</option>
                                         <option value="digital">Digital (Email)</option>
@@ -294,11 +332,11 @@ export default function SuratMasukIndex({ surats, filters }: Props) {
                                     id="file_scan"
                                     type="file"
                                     accept=".pdf,.jpg,.jpeg,.png"
-                                    onChange={e => setData('file_scan', e.target.files ? e.target.files[0] : null)}
+                                    onChange={e => suratForm.setData('file_scan', e.target.files ? e.target.files[0] : null)}
                                     // PERBAIKAN: Hapus properti disabled di sini agar bisa ganti file saat edit
                                 />
                                 <p className="text-[10px] text-muted-foreground">PDF/Gambar, Max 10MB.</p>
-                                <InputError message={errors.file_scan} />
+                                <InputError message={suratForm.errors.file_scan} />
                             </div>
                         </div>
 
@@ -307,18 +345,87 @@ export default function SuratMasukIndex({ surats, filters }: Props) {
                             <textarea
                                 id="ringkasan"
                                 className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                value={data.ringkasan}
-                                onChange={e => setData('ringkasan', e.target.value)}
+                                value={suratForm.data.ringkasan}
+                                onChange={e => suratForm.setData('ringkasan', e.target.value)}
                                 placeholder="Isi ringkasan surat di sini..."
                             />
                         </div>
 
                         <DialogFooter className="col-span-1 md:col-span-2 mt-2">
-                            <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>
+                            <Button type="button" variant="secondary" onClick={() => setisSuratModalOpen(false)}>
                                 Batal
                             </Button>
-                            <Button type="submit" disabled={processing}>
-                                {processing ? 'Menyimpan...' : 'Simpan Data'}
+                            <Button type="submit" disabled={suratForm.processing}>
+                                {suratForm.processing ? 'Menyimpan...' : 'Simpan Data'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+            {/* Modal Disposisi Surat */}
+            <Dialog open={isDisposisiModalOpen} onOpenChange={setIsDisposisiModalOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Disposisi Surat</DialogTitle>
+                        <DialogDescription>
+                            Kirim perintah tindak lanjut untuk surat: <br/>
+                            <strong>{selectedSuratForDisposisi?.no_surat}</strong>
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={submitDisposisi} className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Tujuan Disposisi (Pilih Pegawai)</Label>
+                            <select
+                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                                value={disposisiForm.data.ke_user_id}
+                                onChange={e => disposisiForm.setData('ke_user_id', e.target.value)}
+                                required
+                            >
+                                <option value="">-- Pilih Pegawai --</option>
+                                {users.map(u => (
+                                    <option key={u.id} value={u.id}>
+                                        {u.name} {u.jabatan ? `(${u.jabatan})` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                            <InputError message={disposisiForm.errors.ke_user_id} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Isi Instruksi / Perintah</Label>
+                            <textarea
+                                className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm"
+                                value={disposisiForm.data.instruksi}
+                                onChange={e => disposisiForm.setData('instruksi', e.target.value)}
+                                placeholder="Contoh: Segera tindak lanjuti dan laporkan."
+                                required
+                            />
+                            <InputError message={disposisiForm.errors.instruksi} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Batas Waktu (Opsional)</Label>
+                            <Input
+                                type="date"
+                                value={disposisiForm.data.batas_waktu}
+                                onChange={e => disposisiForm.setData('batas_waktu', e.target.value)}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Catatan Tambahan</Label>
+                            <Input
+                                value={disposisiForm.data.catatan}
+                                onChange={e => disposisiForm.setData('catatan', e.target.value)}
+                                placeholder="Catatan singkat..."
+                            />
+                        </div>
+
+                        <DialogFooter>
+                            <Button type="button" variant="secondary" onClick={() => setIsDisposisiModalOpen(false)}>Batal</Button>
+                            <Button type="submit" disabled={disposisiForm.processing} className="bg-blue-600 hover:bg-blue-700">
+                                <Send className="h-4 w-4 mr-2" /> Kirim Disposisi
                             </Button>
                         </DialogFooter>
                     </form>

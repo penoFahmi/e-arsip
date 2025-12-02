@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\SuratMasuk;
 use App\Models\FileScan;
 use Illuminate\Http\Request;
@@ -26,8 +27,15 @@ class SuratMasukController extends Controller
 
         $surats = $query->paginate(10)->withQueryString();
 
+        // Ambil daftar user aktif selain diri sendiri untuk keperluan assign disposisi
+        $users = User::where('id', '!=', auth()->id())
+                     ->where('status_aktif', true)
+                     ->select('id', 'name', 'jabatan', 'id_bidang')
+                     ->get();
+
         return Inertia::render('surat-masuk/index', [
             'surats' => $surats,
+            'users' => $users,
             'filters' => $request->only(['search']),
         ]);
     }

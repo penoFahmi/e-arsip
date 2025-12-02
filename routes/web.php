@@ -9,6 +9,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\BidangController;
 use App\Http\Controllers\SuratMasukController;
 use App\Http\Controllers\AppSettingController;
+use App\Http\Controllers\DisposisiController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -40,6 +41,7 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('users', UserController::class);
             Route::resource('bidang', BidangController::class);
             Route::resource('surat-masuk', SuratMasukController::class);
+            Route::resource('disposisi', DisposisiController::class);
             Route::get('/settings/app', [AppSettingController::class, 'index'])->name('settings.app');
             Route::post('/settings/app', [AppSettingController::class, 'update'])->name('settings.app.update');
         });
