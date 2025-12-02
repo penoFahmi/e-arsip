@@ -13,17 +13,38 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('app_settings', function (Blueprint $table) {
-        $table->id();
-        $table->string('key')->unique();
-        $table->text('value')->nullable();
-        $table->timestamps();
+            $table->id();
+            $table->string('key')->unique(); // Contoh: 'app_name', 'app_logo'
+            $table->text('value')->nullable(); // Isi setting (bisa teks panjang atau path gambar)
+            $table->timestamps();
         });
 
-        // Opsional: Langsung isi default data agar tidak error saat pertama run
+        // Optional: Isi Data Default agar tidak kosong saat pertama kali
         DB::table('app_settings')->insert([
-            ['key' => 'app_name', 'value' => 'Sistem Surat BKAD'],
-            ['key' => 'app_logo', 'value' => 'default_logo.png'],
-            ['key' => 'instansi_address', 'value' => 'Jl. Jenderal Sudirman No. 1'],
+            [
+                'key' => 'app_name',
+                'value' => 'Sistem E-Arsip',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'key' => 'instansi_name',
+                'value' => 'Pemerintah Daerah',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'key' => 'app_description',
+                'value' => 'Aplikasi Manajemen Surat Menyurat',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'key' => 'app_logo',
+                'value' => null, // Logo default null (nanti dihandle frontend pakai gambar bawaan)
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
     }
 

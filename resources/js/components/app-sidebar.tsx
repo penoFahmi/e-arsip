@@ -10,7 +10,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes'; // Atau gunakan string manual jika route belum ada
+import { dashboard } from '@/routes';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
@@ -62,6 +62,11 @@ export function AppSidebar() {
             icon: Users,
         },
         {
+            title: 'Manajemen Bidang',
+            href: '/bidang', // Route ke CRUD Bidang
+            icon: Folder,
+        },
+        {
             title: 'Pengaturan Aplikasi',
             href: '/settings/app', // Route ke Form Upload Logo (White-label)
             icon: Settings,
@@ -85,7 +90,7 @@ export function AppSidebar() {
     const footerNavItems: NavItem[] = [
         {
             title: 'Dokumentasi',
-            href: '#',
+            href: 'https://github.com/penoFahmi/e-arsip.git',
             icon: BookOpen,
         },
     ];

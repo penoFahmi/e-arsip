@@ -56,7 +56,7 @@ export default function UserIndex({ users, bidangs, filters }: UserIndexProps) {
         username: '',
         email: '',
         password: '',
-        password_confirmation: '', // Field baru untuk konfirmasi
+        password_confirmation: '',
         role: 'staf',
         id_bidang: '',
         jabatan: '',
