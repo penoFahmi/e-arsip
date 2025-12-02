@@ -6,6 +6,8 @@ use Laravel\Fortify\Features;
 use App\Http\Controllers\SetupController;
 use App\Http\Middleware\ForceChangeDefaultEmail;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\BidangController;
+use App\Http\Controllers\SuratMasukController;
 use App\Http\Controllers\AppSettingController;
 
 Route::get('/', function () {
@@ -36,7 +38,8 @@ Route::middleware(['auth'])->group(function () {
 
             // Nanti route surat_masuk, disposisi, dll taruh sini juga
             Route::resource('users', UserController::class);
-            Route::resource('bidang', App\Http\Controllers\BidangController::class);
+            Route::resource('bidang', BidangController::class);
+            Route::resource('surat-masuk', SuratMasukController::class);
             Route::get('/settings/app', [AppSettingController::class, 'index'])->name('settings.app');
             Route::post('/settings/app', [AppSettingController::class, 'update'])->name('settings.app.update');
         });
