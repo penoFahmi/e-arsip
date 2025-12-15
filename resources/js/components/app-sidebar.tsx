@@ -20,7 +20,9 @@ import {
     Users,
     Settings,
     Send,
-    Inbox
+    Inbox,
+    Monitor,
+    FileText
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -68,8 +70,20 @@ export function AppSidebar() {
         },
         {
             title: 'Pengaturan Aplikasi',
-            href: '/settings/app', // Route ke Form Upload Logo (White-label)
+            href: '#', // Route ke Form Upload Logo (White-label)
             icon: Settings,
+            items: [ // Submenu
+                {
+                    title: 'Identitas Aplikasi', // Ke file AppSettings kamu
+                    href: '/settings/app',
+                    icon: Monitor
+                },
+                {
+                    title: 'Label Disposisi', // Ke file DisposisiSettings baru
+                    href: '/settings/disposisi',
+                    icon: FileText
+                }
+            ]
         },
     ];
 

@@ -7,6 +7,8 @@ use App\Models\SuratMasuk;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Services\TrackingService;
+use Illuminate\Support\Facades\DB;
 
 class DisposisiController extends Controller
 {
@@ -16,14 +18,15 @@ class DisposisiController extends Controller
     public function index(Request $request)
     {
         // Ambil disposisi dimana 'ke_user_id' adalah saya
-        $query = Disposisi::with(['surat', 'dariUser', 'surat.fileScan'])
+        $query = Disposisi::with(['surat', 'dariUser', 'parent.dariUser', 'surat.fileScan'])
             ->where('ke_user_id', auth()->id())
             ->latest('tgl_disposisi');
 
         if ($request->search) {
-            $query->whereHas('surat', function($q) use ($request) {
+            $query->whereHas('surat', function ($q) use ($request) {
                 $q->where('perihal', 'like', "%{$request->search}%")
-                  ->orWhere('no_surat', 'like', "%{$request->search}%");
+                    ->orWhere('no_surat', 'like', "%{$request->search}%")
+                    ->orWhere('no_agenda', 'like', "%{$request->search}%");
             });
         }
 
@@ -42,7 +45,9 @@ class DisposisiController extends Controller
     {
         $validated = $request->validate([
             'id_surat' => 'required|exists:surat_masuk,id',
+            'parent_id' => 'nullable|exists:disposisi,id',
             'ke_user_id' => 'required|exists:users,id',
+            'sifat_disposisi' => 'required|in:biasa,segera,sangat_segera,rahasia',
             'instruksi' => 'required|string',
             'batas_waktu' => 'nullable|date',
             'catatan' => 'nullable|string',
@@ -52,12 +57,42 @@ class DisposisiController extends Controller
         $validated['tgl_disposisi'] = now();
         $validated['status_disposisi'] = 'terkirim';
 
-        Disposisi::create($validated);
+        DB::transaction(function () use ($validated, $request) {
 
-        // Opsional: Update status surat induk jadi 'didisposisi'
-        SuratMasuk::where('id', $request->id_surat)->update(['status_surat' => 'didisposisi']);
+            Disposisi::create($validated);
+
+            // Opsional: Update status surat induk jadi 'didisposisi'
+            SuratMasuk::where('id', $request->id_surat)->update(['status_surat' => 'didisposisi']);
+
+            // Jika ini adalah "terusan" disposisi (parent_id ada)
+            //maka disposisi induk otomatis kita tandai selesai atau tindak lanjut
+            if ($request->parent_id) {
+                Disposisi::where('id', $request->parent_id)->update([
+                    'status_disposisi' => 'selesai',
+                    'catatan' => 'Disposisi diteruskan ke staf/bawahan.'
+                ]);
+            }
+
+            // Catat Log Tracking
+            $sifatPesan = strtoupper(str_replace('_', ' ', $validated['sifat_disposisi']));
+            TrackingService::record(
+                $request->id_surat,
+                'disposisi_dikirim',
+                "Disposisi ($sifatPesan) dikirim ke User ID: {$request->ke_user_id}"
+            );
+        });
 
         return redirect()->back()->with('success', 'Disposisi berhasil dikirim.');
+
+        $disposisi = Disposisi::latest()->first();
+
+        $penerima = User::find($request->ke_user_id);
+        // Catat tracking
+        TrackingService::record(
+            $request->id_surat,
+            'disposisi_dikirim',
+            "Disposisi dikirim ke user ID: {$request->ke_user_id}"
+        );
     }
 
     /**
@@ -67,13 +102,28 @@ class DisposisiController extends Controller
     {
         // Pastikan yang update adalah penerima disposisi
         if ($disposisi->ke_user_id !== auth()->id()) {
-            abort(403);
+            abort(403, 'Anda tidak berhak memproses disposi ini.');
         }
 
         $disposisi->update([
             'status_disposisi' => $request->status_disposisi,
-            'catatan' => $request->catatan // jika bawahan ingin balas catatan
+            'catatan' => $request->catatan
         ]);
+
+        // --- TAMBAHAN TRACKING ---
+        // Log pesan berbeda tergantung status
+        $pesan = match ($request->status_disposisi) {
+            'dibaca' => 'Membaca disposisi masuk',
+            'tindak_lanjut' => 'Sedang menindaklanjuti disposisi',
+            'selesai' => 'Menyelesaikan disposisi. Laporan: ' . $request->catatan,
+            default => 'Mengupdate disposisi'
+        };
+
+        TrackingService::record(
+            $disposisi->id_surat,
+            $request->status_disposisi, // aksi: selesai/proses/dibaca
+            $pesan
+        );
 
         return redirect()->back()->with('success', 'Status disposisi diperbarui.');
     }

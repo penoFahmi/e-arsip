@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('surat_masuk', function (Blueprint $table) {
             $table->id(); // id_surat
+            $table->string('no_agenda')->nullable()->index();
             $table->string('no_surat')->unique();
             $table->date('tgl_surat')->nullable();
             $table->date('tgl_terima')->nullable();

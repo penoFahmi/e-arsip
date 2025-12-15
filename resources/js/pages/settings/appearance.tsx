@@ -8,9 +8,10 @@ import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { edit as editAppearance } from '@/routes/appearance';
 
+// Ubah breadcrumb ke Bahasa Indonesia
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Appearance settings',
+        title: 'Pengaturan Tampilan',
         href: editAppearance().url,
     },
 ];
@@ -18,13 +19,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Appearance() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Appearance settings" />
+            <Head title="Pengaturan Tampilan" />
 
             <SettingsLayout>
                 <div className="space-y-6">
                     <HeadingSmall
-                        title="Appearance settings"
-                        description="Update your account's appearance settings"
+                        title="Pengaturan Tampilan"
+                        description="Sesuaikan tema (gelap/terang) aplikasi sesuai kenyamanan Anda."
                     />
                     <AppearanceTabs />
                 </div>

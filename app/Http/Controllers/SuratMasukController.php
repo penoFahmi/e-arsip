@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\SuratMasuk;
 use App\Models\FileScan;
+use App\Services\TrackingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
@@ -12,16 +13,36 @@ use Illuminate\Support\Facades\DB;
 
 class SuratMasukController extends Controller
 {
+    /**
+     * Tampilkan Detail Surat & History Tracking
+     */
+    public function show(SuratMasuk $suratMasuk)
+    {
+        // Load data lengkap: File, Tracking, dan Disposisi
+        $suratMasuk->load([
+            'fileScan',
+            'logTrackings.user', // Load siapa yg melakukan aksi
+            'disposisi.dariUser', // Load siapa yg kirim disposisi
+            'disposisi.keUser',    // Load siapa yg terima
+            'disposisi.children'  // Load disposisi balasan jika ada
+        ]);
+
+        return Inertia::render('surat-masuk/show', [
+            'surat' => $suratMasuk
+        ]);
+    }
+
     public function index(Request $request)
     {
         $query = SuratMasuk::with(['fileScan'])
             ->latest('tgl_terima');
 
         if ($request->search) {
-            $query->where(function($q) use ($request) {
+            $query->where(function ($q) use ($request) {
                 $q->where('perihal', 'like', "%{$request->search}%")
-                  ->orWhere('pengirim', 'like', "%{$request->search}%")
-                  ->orWhere('no_surat', 'like', "%{$request->search}%");
+                    ->orWhere('pengirim', 'like', "%{$request->search}%")
+                    ->orWhere('no_surat', 'like', "%{$request->search}%")
+                    ->orWhere('no_agenda', 'like', "%{$request->search}%");
             });
         }
 
@@ -29,9 +50,9 @@ class SuratMasukController extends Controller
 
         // Ambil daftar user aktif selain diri sendiri untuk keperluan assign disposisi
         $users = User::where('id', '!=', auth()->id())
-                     ->where('status_aktif', true)
-                     ->select('id', 'name', 'jabatan', 'id_bidang')
-                     ->get();
+            ->where('status_aktif', true)
+            ->select('id', 'name', 'jabatan', 'id_bidang')
+            ->get();
 
         return Inertia::render('surat-masuk/index', [
             'surats' => $surats,
@@ -43,6 +64,7 @@ class SuratMasukController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'no_agenda' => 'nullable|string|max:50',
             'no_surat' => 'required|string|max:100|unique:surat_masuk',
             'tgl_surat' => 'required|date',
             'tgl_terima' => 'required|date',
@@ -73,6 +95,13 @@ class SuratMasukController extends Controller
                     'ukuran_file' => $file->getSize(),
                 ]);
             }
+
+            // --- TAMBAHAN TRACKING ---
+            TrackingService::record(
+                $surat->id,
+                'input',
+                'Surat masuk dicatat. No Agenda: ' . ($surat->no_agenda ?? '-')
+            );
         });
 
         return redirect()->back()->with('success', 'Surat masuk berhasil dicatat.');
@@ -84,7 +113,8 @@ class SuratMasukController extends Controller
     public function update(Request $request, SuratMasuk $suratMasuk)
     {
         $validated = $request->validate([
-            'no_surat' => 'required|string|max:100|unique:surat_masuk,no_surat,'.$suratMasuk->id,
+            'no_agenda' => 'nullable|string|max:50',
+            'no_surat' => 'required|string|max:100|unique:surat_masuk,no_surat,' . $suratMasuk->id,
             'tgl_surat' => 'required|date',
             'tgl_terima' => 'required|date',
             'pengirim' => 'required|string|max:255',
@@ -124,6 +154,13 @@ class SuratMasukController extends Controller
                     'ukuran_file' => $file->getSize(),
                 ]);
             }
+
+                // --- TAMBAHAN TRACKING ---
+                TrackingService::record(
+                    $suratMasuk->id,
+                    'edit',
+                    'Data surat berhasil diperbarui'
+                );
         });
 
         return redirect()->back()->with('success', 'Data surat berhasil diperbarui.');

@@ -9,7 +9,9 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\BidangController;
 use App\Http\Controllers\SuratMasukController;
 use App\Http\Controllers\AppSettingController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DisposisiController;
+use App\Http\Controllers\ReportController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -24,26 +26,26 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/setup-email', [SetupController::class, 'show'])->name('show');
         Route::put('/setup-email', [SetupController::class, 'update'])->name('update');
     });
+    Route::get('/surat-masuk/{suratMasuk}/cetak-disposisi', [ReportController::class, 'printDisposisi'])->name('surat.print_disposisi');
+    Route::get('/laporan/agenda-surat-masuk', [ReportController::class, 'printAgenda'])->name('laporan.agenda');
+
 
     Route::middleware([ForceChangeDefaultEmail::class])->group(function () {
 
 
         Route::middleware(['verified'])->group(function () {
 
-            Route::get('/dashboard', function () {
-                return Inertia::render('dashboard');
-            })->name('dashboard');
-
-            // Agar settings juga terlindungi, tidak bisa diakses sembarangan
+            Route::resource('/dashboard', DashboardController::class);
             require __DIR__ . '/settings.php';
-
-            // Nanti route surat_masuk, disposisi, dll taruh sini juga
             Route::resource('users', UserController::class);
             Route::resource('bidang', BidangController::class);
             Route::resource('surat-masuk', SuratMasukController::class);
             Route::resource('disposisi', DisposisiController::class);
             Route::get('/settings/app', [AppSettingController::class, 'index'])->name('settings.app');
             Route::post('/settings/app', [AppSettingController::class, 'update'])->name('settings.app.update');
+            // 2. Pengaturan Disposisi (Label Jabatan) - YANG BARU KITA BUAT
+            Route::get('/settings/disposisi', [AppSettingController::class, 'editDisposisi'])->name('settings.disposisi');
+            Route::post('/settings/disposisi', [AppSettingController::class, 'updateDisposisi']);
         });
     });
 });

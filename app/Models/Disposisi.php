@@ -13,8 +13,10 @@ class Disposisi extends Model
 
     protected $fillable = [
         'id_surat',
+        'parent_id',
         'dari_user_id',
         'ke_user_id',
+        'sifat_disposisi',
         'tgl_disposisi',
         'instruksi',
         'batas_waktu',
@@ -26,6 +28,16 @@ class Disposisi extends Model
         'tgl_disposisi' => 'date',
         'batas_waktu'   => 'date',
     ];
+
+    public function parent()
+    {
+        return $this->belongsTo(Disposisi::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Disposisi::class, 'parent_id');
+    }
 
     public function surat()
     {

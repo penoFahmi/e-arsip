@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Models\AppSetting;
 use Inertia\Inertia;
 
 class AppSettingController extends Controller
@@ -82,5 +83,42 @@ class AppSettingController extends Controller
         cache()->forget('app_settings_global');
 
         return redirect()->back()->with('success', 'Pengaturan aplikasi berhasil diperbarui.');
+    }
+/**
+     * HALAMAN 1: PENGATURAN DISPOSISI
+     * Menampilkan Form
+     */
+    public function editDisposisi()
+    {
+        // Ambil semua setting jadikan array ['key' => 'value']
+        // Ini agar React bisa membaca default value-nya
+        $settings = AppSetting::pluck('value', 'key');
+
+        // Panggil file React: resources/js/pages/settings/disposisi.tsx
+        return Inertia::render('settings/disposisi', [
+            'settings' => $settings
+        ]);
+    }
+
+    /**
+     * Simpan Perubahan Disposisi
+     */
+    public function updateDisposisi(Request $request)
+    {
+        // Ambil semua input dari form React
+        $data = $request->all();
+
+        // Simpan loop ke database
+        foreach ($data as $key => $value) {
+            // Hindari menyimpan token atau null value yang tidak perlu
+            if ($value !== null && $key !== '_token') {
+                AppSetting::updateOrCreate(
+                    ['key' => $key],
+                    ['value' => $value]
+                );
+            }
+        }
+
+        return redirect()->back()->with('success', 'Label disposisi berhasil diperbarui.');
     }
 }

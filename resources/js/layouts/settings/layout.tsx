@@ -27,7 +27,7 @@ const sidebarNavItems: NavItem[] = [
         icon: null,
     },
     {
-        title: 'Appearance',
+        title: 'Pengaturan Tampilan',
         href: editAppearance(),
         icon: null,
     },
