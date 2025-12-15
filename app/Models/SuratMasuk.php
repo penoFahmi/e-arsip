@@ -13,6 +13,8 @@ class SuratMasuk extends Model
 
     protected $fillable = [
         'no_agenda',
+        'kode_klasifikasi',
+        'id_bidang_penerima',
         'no_surat',
         'tgl_surat',
         'tgl_terima',
@@ -29,6 +31,12 @@ class SuratMasuk extends Model
         'tgl_surat'  => 'date',
         'tgl_terima' => 'date',
     ];
+
+    // Relasi ke Bidang Penerima (Tujuan Awal)
+    public function bidangPenerima()
+    {
+        return $this->belongsTo(Bidang::class, 'id_bidang_penerima');
+    }
 
     public function userInput()
     {

@@ -1,15 +1,14 @@
-// resources/js/pages/surat-masuk/index.tsx
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { PageProps, BreadcrumbItem } from '@/types';
-import { Plus, Search, FileSpreadsheet } from 'lucide-react'; // Pastikan import FileSpreadsheet ada
+import { Plus, Search, FileSpreadsheet } from 'lucide-react';
 
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 // Import komponen pecahan kita
-import { SuratData, UserLite } from './types';
+import { SuratData, UserLite, BidangOption } from './types';
 import SuratList from './components/surat-list';
 import SuratFormModal from './components/surat-form-modal';
 import DisposisiModal from './components/disposisi-modal';
@@ -17,10 +16,11 @@ import DisposisiModal from './components/disposisi-modal';
 interface Props extends PageProps {
     surats: { data: SuratData[]; links: any[] };
     users: UserLite[];
+    bidangs: BidangOption[];
     filters: { search: string };
 }
 
-export default function SuratMasukIndex({ surats, users, filters }: Props) {
+export default function SuratMasukIndex({ surats, users, bidangs, filters }: Props) {
     // --- STATE ---
     const [isSuratModalOpen, setisSuratModalOpen] = useState(false);
     const [editingSurat, setEditingSurat] = useState<SuratData | null>(null);
@@ -104,12 +104,11 @@ export default function SuratMasukIndex({ surats, users, filters }: Props) {
                         <Button onClick={openCreate} className="shrink-0">
                             <Plus className="h-4 w-4 md:mr-2" />
                             <span className="hidden md:inline">Input Surat</span>
-                            <span className="md:hidden">Input</span>
                         </Button>
                     </div>
                 </div>
 
-                {/* 2. Content List (Responsive Table/Card) */}
+                {/* 2. Content List */}
                 <SuratList
                     data={surats.data}
                     onEdit={openEdit}
@@ -122,13 +121,14 @@ export default function SuratMasukIndex({ surats, users, filters }: Props) {
                     isOpen={isSuratModalOpen}
                     onClose={() => setisSuratModalOpen(false)}
                     editingData={editingSurat}
+                    bidangs={bidangs}
                 />
 
                 <DisposisiModal
                     isOpen={isDisposisiModalOpen}
                     onClose={() => setIsDisposisiModalOpen(false)}
                     surat={selectedSuratForDisposisi}
-                    users={users}
+                    // users={users}
                 />
             </div>
         </AppLayout>

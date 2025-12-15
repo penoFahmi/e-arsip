@@ -1,5 +1,3 @@
-// resources/js/pages/surat-masuk/types.ts
-
 export interface UserLite {
     id: number;
     name: string;
@@ -13,9 +11,17 @@ export interface FileScan {
     path_file: string;
 }
 
+export interface BidangOption {
+    id: number;
+    nama_bidang: string;
+}
+
 export interface SuratData {
     id: number;
     no_agenda: string;
+    kode_klasifikasi?: string;
+    id_bidang_penerima?: number | null;
+
     no_surat: string;
     tgl_surat: string;
     tgl_terima: string;

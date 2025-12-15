@@ -29,6 +29,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/surat-masuk/{suratMasuk}/cetak-disposisi', [ReportController::class, 'printDisposisi'])->name('surat.print_disposisi');
     Route::get('/laporan/agenda-surat-masuk', [ReportController::class, 'printAgenda'])->name('laporan.agenda');
 
+    Route::get('/api/users/bawahan', [UserController::class, 'getBawahan']);
 
     Route::middleware([ForceChangeDefaultEmail::class])->group(function () {
 

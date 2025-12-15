@@ -41,11 +41,11 @@ class UserController extends Controller
         $roleLabels = AppSetting::where('key', 'like', 'label_%')->pluck('value', 'key');
 
         return Inertia::render('users/index', [
-        'users' => $users,
-        'bidangs' => $bidangs,
-        'roleLabels' => $roleLabels,
-        'filters' => $request->only(['search', 'role', 'status']),
-    ]);
+            'users' => $users,
+            'bidangs' => $bidangs,
+            'roleLabels' => $roleLabels,
+            'filters' => $request->only(['search', 'role', 'status']),
+        ]);
     }
 
     public function store(Request $request)
@@ -108,5 +108,33 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->back()->with('success', 'Pegawai berhasil dihapus.');
+    }
+
+    // API untuk mengambil daftar bawahan (Dipanggil oleh React saat buka Modal Disposisi)
+    public function getBawahan()
+    {
+        $user = auth()->user();
+        $query = User::query()->where('id', '!=', $user->id)->where('status_aktif', true);
+
+        // LOGIKA HIERARKI OTOMATIS
+        if ($user->role === 'level_1') {
+            // Level 1 (Kaban) hanya bisa perintah ke Level 2 (Sekretaris/Kabid)
+            $query->where('role', 'level_2');
+        } elseif ($user->role === 'level_2') {
+            // Level 2 (Kabid) hanya bisa perintah ke Level 3 (Kasubbid) DI BIDANGNYA SENDIRI
+            // Atau ke Sekretariat (Cross-disposisi jarang, tapi bisa dibuka jika perlu)
+            $query->where('role', 'level_3')
+                ->where('id_bidang', $user->id_bidang);
+            // Jika Kabid Anggaran, cuma muncul Kasubbid di Anggaran
+        } elseif ($user->role === 'level_3') {
+            // Level 3 (Kasubbid) perintah ke Staf di bidangnya
+            $query->where('role', 'staf')
+                ->where('id_bidang', $user->id_bidang);
+        }
+
+        // Select data seperlunya
+        $users = $query->select('id', 'name', 'jabatan', 'role')->get();
+
+        return response()->json($users);
     }
 }
