@@ -19,9 +19,10 @@ interface Props {
     onClose: () => void;
     editingData: UserData | null;
     bidangs: BidangOption[];
+    roleLabels: Record<string, string>;
 }
 
-export default function UserFormModal({ isOpen, onClose, editingData, bidangs }: Props) {
+export default function UserFormModal({ isOpen, onClose, editingData, bidangs, roleLabels }: Props) {
     const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
         name: '',
         username: '',
@@ -122,35 +123,43 @@ export default function UserFormModal({ isOpen, onClose, editingData, bidangs }:
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="role">Role</Label>
+                            <Label htmlFor="role">Role / Level Akses</Label>
                             <select
                                 id="role"
                                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                 value={data.role}
                                 onChange={e => setData('role', e.target.value)}
                             >
-                                <option value="staf">Staf</option>
-                                <option value="pimpinan">Pimpinan</option>
-                                <option value="admin_bidang">Admin Bidang</option>
-                                <option value="super_admin">Super Admin</option>
+                                <option value="staf">Staf (Pelaksana)</option>
+                                {/* [BARU] Pilihan Role Dinamis sesuai Settings */}
+                                <option value="level_3">
+                                    {roleLabels['label_level_3'] || 'Level 3 (Kasubbag/Kasi)'}
+                                </option>
+                                <option value="level_2">
+                                    {roleLabels['label_level_2'] || 'Level 2 (Kabid/Sekretaris)'}
+                                </option>
+                                <option value="level_1">
+                                    {roleLabels['label_level_1'] || 'Level 1 (Kepala Dinas)'}
+                                </option>
+                                <option value="super_admin">Super Admin (IT)</option>
                             </select>
                             <InputError message={errors.role} />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="id_bidang">Bidang</Label>
+                            <Label htmlFor="id_bidang">Unit Kerja</Label>
                             <select
                                 id="id_bidang"
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors disabled:opacity-50"
                                 value={data.id_bidang}
                                 onChange={e => setData('id_bidang', e.target.value)}
-                                disabled={data.role === 'super_admin'}
                             >
-                                <option value="">-- Pilih --</option>
+                                <option value="">-- Pilih Unit --</option>
                                 {bidangs.map(b => (
                                     <option key={b.id} value={b.id}>{b.nama_bidang}</option>
                                 ))}
                             </select>
+                            <p className="text-[10px] text-muted-foreground">Kosongkan jika Pimpinan Tertinggi.</p>
                             <InputError message={errors.id_bidang} />
                         </div>
                     </div>

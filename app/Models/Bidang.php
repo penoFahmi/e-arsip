@@ -9,17 +9,30 @@ class Bidang extends Model
 {
     use HasFactory;
 
-    // Nama tabel di database (opsional jika sesuai standar plural, tapi aman ditulis)
     protected $table = 'bidang';
 
     protected $fillable = [
         'nama_bidang',
         'kode',
+        'parent_id', // [BARU]
+        'urutan'     // [BARU]
     ];
 
-    // Relasi balik: Satu Bidang punya banyak User
+    // Relasi ke User (Anggota Bidang)
     public function users()
     {
         return $this->hasMany(User::class, 'id_bidang');
+    }
+
+    // Relasi ke Induk (Misal: Sub-Bidang ke Bidang)
+    public function parent()
+    {
+        return $this->belongsTo(Bidang::class, 'parent_id');
+    }
+
+    // Relasi ke Anak (Misal: Bidang ke Sub-Bidang)
+    public function children()
+    {
+        return $this->hasMany(Bidang::class, 'parent_id');
     }
 }

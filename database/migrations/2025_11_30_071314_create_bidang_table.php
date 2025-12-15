@@ -6,29 +6,45 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('bidang', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_bidang'); // Contoh: "Bidang Anggaran"
-            $table->string('kode', 10)->nullable(); // Contoh: "ANG"
+
+            // Nama Unit Kerja (Contoh: "Sekretariat", "Bidang Anggaran", "Seksi Trantib")
+            $table->string('nama_bidang');
+
+            // Kode Singkatan (Contoh: "SEK", "ANG", "TRANTIB")
+            $table->string('kode', 20)->nullable();
+
+            // [KUNCI FLEKSIBILITAS HIRARKI]
+            // NULL = Level Teratas (Bisa Sekretariat / Bidang)
+            // ADA ISI = Sub-Unit (Anak dari parent_id)
+            $table->foreignId('parent_id')
+                ->nullable()
+                ->constrained('bidang')
+                ->nullOnDelete();
+
+            // Level urutan hirarki (opsional, untuk sorting tampilan)
+            $table->integer('urutan')->default(1);
+
             $table->timestamps();
         });
-        // Opsional: Setelah tabel bidang jadi, kita sambungkan Foreign Key user ke sini
-        // Ini dilakukan di sini agar tidak error urutan migrasi
+
+        // Relasi User ke Bidang (Disimpan disini agar urutan migrate aman)
         Schema::table('users', function (Blueprint $table) {
+            // Hapus foreign key lama jika ada (untuk safety saat refresh)
+            // $table->dropForeign(['id_bidang']);
+
             $table->foreign('id_bidang')->references('id')->on('bidang')->nullOnDelete();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropForeign(['id_bidang']);
+        });
         Schema::dropIfExists('bidang');
     }
 };

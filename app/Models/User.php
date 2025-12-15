@@ -86,4 +86,8 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsTo(Bidang::class, 'id_bidang');
     }
+    // Helper untuk cek level
+    public function isSuperAdmin() { return $this->role === 'super_admin'; }
+    public function isLevel1() { return $this->role === 'level_1'; }
+    public function isLevel2() { return $this->role === 'level_2'; }
 }

@@ -15,10 +15,11 @@ import UserFormModal from './components/user-form-modal';
 interface Props extends PageProps {
     users: { data: UserData[]; links: any[]; from: number };
     bidangs: BidangOption[];
-    filters: { search: string };
+    roleLabels: Record<string, string>; // Data label role dari Controller
+    filters: { search: string; role?: string; status?: string }; // Update tipe filters
 }
 
-export default function UserIndex({ users, bidangs, filters }: Props) {
+export default function UserIndex({ users, bidangs, roleLabels, filters }: Props) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserData | null>(null);
     const [search, setSearch] = useState(filters.search || '');
@@ -46,8 +47,8 @@ export default function UserIndex({ users, bidangs, filters }: Props) {
     };
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }, { title: 'Manajemen User', href: '/users' }]}>
-            <Head title="Manajemen User" />
+        <AppLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }, { title: 'Manajemen Pegawai', href: '/users' }]}>
+            <Head title="Manajemen Pegawai" />
 
             <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
 
@@ -81,6 +82,8 @@ export default function UserIndex({ users, bidangs, filters }: Props) {
                     data={users.data}
                     onEdit={openEditModal}
                     onDelete={deleteUser}
+                    filters={filters}
+                    roleLabels={roleLabels}
                 />
 
                 {/* Modal Form */}
@@ -89,6 +92,7 @@ export default function UserIndex({ users, bidangs, filters }: Props) {
                     onClose={() => setIsModalOpen(false)}
                     editingData={editingUser}
                     bidangs={bidangs}
+                    roleLabels={roleLabels}
                 />
 
             </div>
