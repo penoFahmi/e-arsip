@@ -52,10 +52,10 @@ class DashboardController extends Controller
         // 4. Data Surat Terbaru (Tetap ada)
         $recentSurats = SuratMasuk::latest('tgl_terima')->take(5)->get();
 
-        return Inertia::render('dashboard', [
+        return Inertia::render('dashboard/index', [
             'stats' => $stats,
             'recents' => $recentSurats,
-            'agendas' => $agendas, // [BARU] Kirim data agenda ke frontend
+            'agendas' => $agendas,
         ]);
     }
 }

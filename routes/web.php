@@ -12,6 +12,7 @@ use App\Http\Controllers\AppSettingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DisposisiController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\SuratKeluarController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -44,6 +45,9 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('users', UserController::class);
             Route::resource('bidang', BidangController::class);
             Route::resource('surat-masuk', SuratMasukController::class);
+            Route::resource('surat-keluar', SuratKeluarController::class);
+            Route::post('/surat-keluar/{suratKeluar}/upload-bukti', [SuratKeluarController::class, 'uploadBukti'])
+                ->name('surat-keluar.upload-bukti');
             Route::get('/disposisi/export', [DisposisiController::class, 'export'])->name('disposisi.export');
             Route::resource('disposisi', DisposisiController::class);
             Route::get('/settings/app', [AppSettingController::class, 'index'])->name('settings.app');

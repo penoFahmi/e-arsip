@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
 
 class DisposisiController extends Controller
 {
-    // ... Method Index SAMA ...
+    
     public function index(Request $request)
     {
         $query = Disposisi::with(['surat', 'dariUser', 'parent.dariUser', 'surat.fileScan'])

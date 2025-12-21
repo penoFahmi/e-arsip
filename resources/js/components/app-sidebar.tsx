@@ -20,9 +20,10 @@ import {
     Users,
     Settings,
     Send,
-    Inbox,
     Monitor,
-    FileText
+    FileText,
+    FileInput,
+    FileOutput,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -41,18 +42,21 @@ export function AppSidebar() {
     ];
 
     // 3. Menu Surat (Untuk Staff, Admin Bidang, Pimpinan)
-    // Super Admin biasanya hanya memantau, tapi bisa juga akses jika perlu.
-    // Di sini kita anggap semua butuh akses surat kecuali disembunyikan spesifik.
     const suratMenu: NavItem[] = [
         {
             title: 'Surat Masuk',
             href: '/surat-masuk',
-            icon: Inbox,
+            icon: FileInput,
         },
         {
             title: 'Disposisi',
             href: '/disposisi',
             icon: Send,
+        },
+        {
+            title: 'Surat Keluar',
+            href: '/surat-keluar',
+            icon: FileOutput,
         },
     ];
 
