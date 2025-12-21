@@ -16,14 +16,14 @@ export interface DisposisiData {
     instruksi: string;
     batas_waktu?: string;
 
-    // [BARU] Sesuai update Model & Migration
     sifat_disposisi: 'biasa' | 'segera' | 'sangat_segera' | 'rahasia';
     parent?: {
         dari_user: UserData
     }; // Info atasan dari atasan (jika berjenjang)
 
-    status_disposisi: 'terkirim' | 'dibaca' | 'tindak_lanjut' | 'selesai'; // Sesuaikan enum migration
+    status_disposisi: 'terkirim' | 'dibaca' | 'tindak_lanjut' | 'selesai';
     catatan?: string;
     surat: SuratData;
     dari_user: UserData;
+    file_tindak_lanjut?: string;
 }

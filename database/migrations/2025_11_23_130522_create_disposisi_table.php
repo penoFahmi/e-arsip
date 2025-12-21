@@ -40,7 +40,7 @@ return new class extends Migration
                 ->cascadeOnUpdate()
                 ->restrictOnDelete();
 
-            // Sifat Disposisi (Penting untuk warna badge di UI nanti)
+            $table->string('no_agenda_penerima')->nullable();
             $table->enum('sifat_disposisi', ['biasa', 'segera', 'sangat_segera', 'rahasia'])
                 ->default('biasa');
 

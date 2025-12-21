@@ -1,7 +1,7 @@
 import { Clock, FileText, User as UserIcon, AlertTriangle, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, FileCheck} from 'lucide-react';
 import { DisposisiData } from '../types';
 
 interface Props {
@@ -94,26 +94,36 @@ export default function DisposisiList({ data, onUpdateClick }: Props) {
                     </div>
 
                     {/* Footer: Status & Action */}
-                    <div className="flex items-center justify-between pt-2">
+                    <div className="flex items-center justify-between pt-2 mt-auto">
                         {getStatusBadge(item.status_disposisi)}
 
                         <div className="flex gap-2">
+                            {/* 1. File Surat Asli */}
                             {item.surat.file_scan?.[0] && (
-                                <Button variant="ghost" size="sm" className="h-8 text-xs" asChild>
-                                    <a href={`/storage/${item.surat.file_scan[0].path_file}`} target="_blank">
-                                        <FileText className="h-3 w-3 mr-1" /> File
+                                <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground" asChild>
+                                    <a href={`/storage/${item.surat.file_scan[0].path_file}`} target="_blank" title="Lihat Surat Asli">
+                                        <FileText className="h-3.5 w-3.5 mr-1" /> Surat
                                     </a>
                                 </Button>
                             )}
 
+                            {/* 2. [BARU] File Hasil Tindak Lanjut */}
+                            {item.file_tindak_lanjut && (
+                                <Button variant="outline" size="sm" className="h-8 text-xs border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800" asChild>
+                                    <a href={`/storage/${item.file_tindak_lanjut}`} target="_blank" title="Lihat Laporan/Hasil">
+                                        <FileCheck className="h-3.5 w-3.5 mr-1" /> Hasil
+                                    </a>
+                                </Button>
+                            )}
+
+                            {/* 3. Tombol Tindak Lanjut */}
                             <Button
                                 size="sm"
-                                variant={item.status_disposisi === 'selesai' ? 'outline' : 'default'}
+                                variant={item.status_disposisi === 'selesai' ? 'secondary' : 'default'}
                                 onClick={() => onUpdateClick(item)}
-                                className="h-8 text-xs"
+                                className="h-8 text-xs shadow-sm"
                             >
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                {item.status_disposisi === 'selesai' ? 'Detail' : 'Tindak Lanjut'}
+                                {item.status_disposisi === 'selesai' ? 'Update' : 'Tindak Lanjut'}
                             </Button>
                         </div>
                     </div>

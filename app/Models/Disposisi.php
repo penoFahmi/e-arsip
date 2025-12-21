@@ -16,12 +16,14 @@ class Disposisi extends Model
         'parent_id',
         'dari_user_id',
         'ke_user_id',
+        'no_agenda_penerima',
         'sifat_disposisi',
         'tgl_disposisi',
         'instruksi',
         'batas_waktu',
         'status_disposisi',
         'catatan',
+        'file_tindak_lanjut',
     ];
 
     protected $casts = [

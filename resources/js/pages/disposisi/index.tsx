@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
-import { Search } from 'lucide-react';
+import { Search, FileSpreadsheet } from 'lucide-react'; // Tambah icon
 
 import AppLayout from '@/layouts/app-layout';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button'; // Import Button
 
-// Import komponen pecahan
 import { DisposisiData } from './types';
 import DisposisiList from './components/disposisi-list';
 import DisposisiUpdateModal from './components/disposisi-update-modal';
@@ -32,6 +32,11 @@ export default function DisposisiIndex({ disposisis, filters }: Props) {
         setIsUpdateModalOpen(true);
     };
 
+    // Fungsi Export
+    const handleExport = () => {
+        window.location.href = '/disposisi/export';
+    };
+
     return (
         <AppLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }, { title: 'Disposisi Masuk', href: '/disposisi' }]}>
             <Head title="Disposisi Masuk" />
@@ -42,17 +47,30 @@ export default function DisposisiIndex({ disposisis, filters }: Props) {
                 <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                     <div>
                         <h2 className="text-xl font-semibold text-foreground">Disposisi Masuk</h2>
-                        <p className="text-sm text-muted-foreground">Daftar tugas dan disposisi yang perlu Anda tindak lanjuti.</p>
+                        <p className="text-sm text-muted-foreground">Kelola tugas masuk dan buat agenda kegiatan langsung.</p>
                     </div>
-                    <div className="relative w-full md:w-64">
-                        <Input
-                            placeholder="Cari No Surat / Perihal..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            onKeyDown={handleSearch}
-                            className="pl-8 bg-background"
-                        />
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+
+                    <div className="flex w-full md:w-auto items-center gap-2">
+                         {/* TOMBOL EXPORT BARU */}
+                         <Button
+                            variant="outline"
+                            className="gap-2 border-green-200 text-green-700 hover:bg-green-50"
+                            onClick={handleExport}
+                        >
+                            <FileSpreadsheet className="h-4 w-4" />
+                            <span className="hidden sm:inline">Rekap Excel</span>
+                        </Button>
+
+                        <div className="relative w-full md:w-64">
+                            <Input
+                                placeholder="Cari No Surat / Perihal..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                onKeyDown={handleSearch}
+                                className="pl-8 bg-background"
+                            />
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        </div>
                     </div>
                 </div>
 

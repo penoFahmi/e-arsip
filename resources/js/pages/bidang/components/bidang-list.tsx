@@ -1,60 +1,131 @@
-import { Pencil, Trash2, Building2, Users } from 'lucide-react';
+import { useState } from 'react';
+import { Pencil, Trash2, Building2, Users, ChevronRight, ChevronDown, Plus, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { BidangData } from '../types';
 
 interface Props {
     data: BidangData[];
     onEdit: (bidang: BidangData) => void;
     onDelete: (id: number) => void;
+    onAddSub: (parentId: number, parentName: string) => void; // [PENTING] Fungsi tambah anak
 }
 
-export default function BidangList({ data, onEdit, onDelete }: Props) {
+export default function BidangList({ data, onEdit, onDelete, onAddSub }: Props) {
     if (data.length === 0) {
-        return <div className="p-8 text-center text-muted-foreground border rounded-xl bg-background">Belum ada data bidang.</div>;
+        return (
+            <div className="p-12 text-center border-2 border-dashed rounded-xl bg-muted/20">
+                <Building2 className="mx-auto h-12 w-12 text-muted-foreground/50 mb-3" />
+                <h3 className="text-lg font-medium text-foreground">Struktur Belum Ada</h3>
+                <p className="text-sm text-muted-foreground">Mulai dengan menambahkan Kepala Badan / Unit Utama.</p>
+            </div>
+        );
     }
 
     return (
-        <div className="rounded-xl border border-sidebar-border/70 overflow-hidden bg-background">
-            <table className="w-full text-sm text-left">
-                <thead className="bg-muted/50 text-muted-foreground border-b">
-                    <tr>
-                        <th className="px-6 py-3 font-medium">Kode</th>
-                        <th className="px-6 py-3 font-medium">Nama Bidang</th>
-                        <th className="px-6 py-3 font-medium text-center">Jumlah Pegawai</th>
-                        <th className="px-6 py-3 font-medium text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y">
-                    {data.map((bidang) => (
-                        <tr key={bidang.id} className="hover:bg-muted/50 transition-colors">
-                            <td className="px-6 py-4 font-mono text-xs">
-                                <span className="bg-gray-100 px-2 py-1 rounded text-gray-600 font-bold">
-                                    {bidang.kode}
-                                </span>
-                            </td>
-                            <td className="px-6 py-4 font-medium flex items-center gap-2">
-                                <Building2 className="h-4 w-4 text-gray-400" />
-                                {bidang.nama_bidang}
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                                <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-medium border border-blue-100">
-                                    <Users className="h-3 w-3" /> {bidang.users_count || 0}
-                                </span>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                                <div className="flex justify-end gap-2">
-                                    <Button variant="ghost" size="icon" onClick={() => onEdit(bidang)} title="Edit">
-                                        <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" onClick={() => onDelete(bidang.id)} title="Hapus">
-                                        <Trash2 className="h-4 w-4 text-destructive hover:text-red-700" />
-                                    </Button>
-                                </div>
-                            </td>
-                        </tr>
+        <div className="space-y-3">
+            {data.map((bidang) => (
+                <BidangItem
+                    key={bidang.id}
+                    item={bidang}
+                    level={0}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onAddSub={onAddSub}
+                />
+            ))}
+        </div>
+    );
+}
+
+function BidangItem({ item, level, onEdit, onDelete, onAddSub }: {
+    item: BidangData;
+    level: number;
+    onEdit: (b: BidangData) => void;
+    onDelete: (id: number) => void;
+    onAddSub: (id: number, name: string) => void;
+}) {
+    const hasChildren = item.children && item.children.length > 0;
+    const [isExpanded, setIsExpanded] = useState(true); // Default terbuka semua biar admin liat semua
+
+    return (
+        <div className={cn(
+            "rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden transition-all",
+            level > 0 ? "mt-2 border-l-4 border-l-primary/20 ml-4 sm:ml-8" : "mb-4 border-l-4 border-l-primary"
+        )}>
+            {/* Baris Konten */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 gap-3 bg-white dark:bg-zinc-900">
+                <div className="flex items-start gap-3 w-full sm:w-auto">
+                    {/* Tombol Buka Tutup (Hanya jika punya anak) */}
+                    <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        disabled={!hasChildren}
+                        className={cn(
+                            "mt-1 sm:mt-0 p-1 rounded transition-colors",
+                            hasChildren ? "hover:bg-muted text-foreground cursor-pointer" : "text-transparent cursor-default"
+                        )}
+                    >
+                        {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </button>
+
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className={cn("font-semibold", level === 0 ? "text-lg" : "text-base")}>
+                                {item.nama_bidang}
+                            </span>
+                            {item.kode && (
+                                <Badge variant="outline" className="font-mono text-xs bg-slate-50 text-slate-600 border-slate-200">
+                                    {item.kode}
+                                </Badge>
+                            )}
+                        </div>
+                        <div className="flex items-center text-xs text-muted-foreground gap-3">
+                            <span className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
+                                <Users className="h-3 w-3" /> {item.users_count || 0} Pegawai
+                            </span>
+                            {level === 0 && <span className="text-xs italic text-gray-400">Unit Utama</span>}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Tombol Aksi */}
+                <div className="flex items-center gap-1 self-end sm:self-center w-full sm:w-auto justify-end border-t sm:border-t-0 pt-2 sm:pt-0 mt-2 sm:mt-0">
+                    {/* TOMBOL PINTAR: Tambah Sub */}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs gap-1 border-dashed border-slate-300 text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition-all mr-2"
+                        onClick={() => onAddSub(item.id, item.nama_bidang)}
+                    >
+                        <Plus className="h-3 w-3" />
+                        <span className="">Sub</span>
+                    </Button>
+
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(item)}>
+                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => onDelete(item.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                </div>
+            </div>
+
+            {/* Area Anak (Rekursif) */}
+            {hasChildren && isExpanded && (
+                <div className="bg-slate-50/50 dark:bg-slate-900/20 p-2 border-t">
+                    {item.children?.map((child) => (
+                        <BidangItem
+                            key={child.id}
+                            item={child}
+                            level={level + 1} // Level bertambah
+                            onEdit={onEdit}
+                            onDelete={onDelete}
+                            onAddSub={onAddSub}
+                        />
                     ))}
-                </tbody>
-            </table>
+                </div>
+            )}
         </div>
     );
 }

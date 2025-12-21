@@ -3,12 +3,12 @@ import { useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge'; // Import Badge
 import InputError from '@/components/input-error';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Send, AlertCircle, Loader2 } from 'lucide-react';
-import { SuratData } from '../types'; // Hapus UserLite dari import karena kita definisikan lokal atau via API
+import { Send, AlertCircle, Sparkles, UserCheck } from 'lucide-react'; // Icon baru
+import { SuratData } from '../types';
 
-// Definisi tipe user khusus untuk dropdown bawahan
 interface Bawahan {
     id: number;
     name: string;
@@ -20,13 +20,22 @@ interface Props {
     isOpen: boolean;
     onClose: () => void;
     surat: SuratData | null;
-    // users: UserLite[]; <-- HAPUS INI, kita tidak butuh data statis lagi
 }
 
 export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
-    // State untuk menampung data bawahan dari API
     const [bawahanList, setBawahanList] = useState<Bawahan[]>([]);
     const [isLoadingBawahan, setIsLoadingBawahan] = useState(false);
+
+    // [BARU] Daftar Template Instruksi yang sering dipakai
+    const quickInstructions = [
+        "Mohon ditindaklanjuti",
+        "Untuk diketahui",
+        "Koordinasikan",
+        "Hadiri / Wakili",
+        "Siapkan bahan",
+        "Telaah & Saran",
+        "Arsipkan",
+    ];
 
     const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         id_surat: '',
@@ -43,7 +52,6 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
             reset();
             setData('id_surat', String(surat.id));
 
-            // [LOGIC BARU] Ambil daftar bawahan sesuai hierarki login
             setIsLoadingBawahan(true);
             fetch('/api/users/bawahan')
                 .then((res) => res.json())
@@ -58,6 +66,14 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
         }
     }, [isOpen, surat]);
 
+    // Fungsi menambah instruksi cepat
+    const addInstruction = (text: string) => {
+        // Jika sudah ada teks, tambahkan koma
+        const current = data.instruksi;
+        const separator = current.length > 0 ? ", " : "";
+        setData('instruksi', current + separator + text);
+    };
+
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post('/disposisi', { onSuccess: onClose });
@@ -65,52 +81,62 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>Disposisi Surat</DialogTitle>
-                    <DialogDescription>
-                        Tindak lanjut surat: <span className="font-semibold text-foreground">{surat?.no_surat}</span>
-                    </DialogDescription>
+                    <div className="flex items-center gap-2">
+                        <div className="p-2 bg-blue-100 rounded-full text-blue-600">
+                            <Send className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <DialogTitle>Disposisi Surat</DialogTitle>
+                            <DialogDescription>
+                                Instruksikan bawahan untuk menindaklanjuti surat ini.
+                            </DialogDescription>
+                        </div>
+                    </div>
                 </DialogHeader>
 
-                <form onSubmit={submit} className="space-y-4 py-2">
+                <div className="bg-muted/30 p-3 rounded-md border border-dashed text-xs text-muted-foreground mb-2">
+                    <span className="font-semibold text-foreground">Ref Surat:</span> {surat?.perihal}
+                </div>
+
+                <form onSubmit={submit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2 col-span-2 md:col-span-1">
-                            <Label>Tujuan Disposisi</Label>
-
-                            {/* Dropdown Cerdas */}
-                            <select
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
-                                value={data.ke_user_id}
-                                onChange={e => setData('ke_user_id', e.target.value)}
-                                required
-                                disabled={isLoadingBawahan}
-                            >
-                                <option value="">
-                                    {isLoadingBawahan ? 'Memuat data...' : '-- Pilih Bawahan --'}
-                                </option>
-
-                                {!isLoadingBawahan && bawahanList.map(u => (
-                                    <option key={u.id} value={u.id}>
-                                        {u.name} ({u.jabatan})
+                            <Label>Tujuan Disposisi <span className="text-red-500">*</span></Label>
+                            <div className="relative">
+                                <UserCheck className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <select
+                                    className="flex h-9 w-full rounded-md border border-input bg-transparent pl-9 pr-3 text-sm shadow-sm focus:ring-1 focus:ring-primary disabled:opacity-50"
+                                    value={data.ke_user_id}
+                                    onChange={e => setData('ke_user_id', e.target.value)}
+                                    required
+                                    disabled={isLoadingBawahan}
+                                >
+                                    <option value="">
+                                        {isLoadingBawahan ? 'Memuat...' : '-- Pilih Bawahan --'}
                                     </option>
-                                ))}
-                            </select>
+                                    {!isLoadingBawahan && bawahanList.map(u => (
+                                        <option key={u.id} value={u.id}>
+                                            {u.name} — {u.jabatan}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <InputError message={errors.ke_user_id} />
 
-                            {/* Pesan jika tidak punya bawahan */}
                             {!isLoadingBawahan && bawahanList.length === 0 && (
-                                <p className="text-[10px] text-red-500 mt-1">
-                                    Anda tidak memiliki bawahan langsung untuk didisposisikan.
+                                <p className="text-[10px] text-orange-600 mt-1 flex items-center gap-1">
+                                    <AlertCircle className="h-3 w-3" />
+                                    Tidak ada bawahan langsung.
                                 </p>
                             )}
-
-                            <InputError message={errors.ke_user_id} />
                         </div>
 
                         <div className="space-y-2 col-span-2 md:col-span-1">
                             <Label>Sifat Instruksi</Label>
                             <select
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus:ring-1 focus:ring-primary"
                                 value={data.sifat_disposisi}
                                 onChange={e => setData('sifat_disposisi', e.target.value)}
                                 required
@@ -120,45 +146,71 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                                 <option value="sangat_segera">Sangat Segera</option>
                                 <option value="rahasia">Rahasia</option>
                             </select>
-                            <InputError message={errors.sifat_disposisi} />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Isi Instruksi</Label>
+                        <Label className="flex justify-between items-center">
+                            Isi Instruksi <span className="text-red-500">*</span>
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                <Sparkles className="h-3 w-3 text-yellow-500" />
+                                Klik tag di bawah untuk isi cepat
+                            </span>
+                        </Label>
+
                         <textarea
-                            className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50"
                             value={data.instruksi}
                             onChange={e => setData('instruksi', e.target.value)}
                             required
-                            placeholder="Contoh: Segera koordinasikan, atau Hadir mewakili saya..."
+                            placeholder="Ketik instruksi manual disini..."
                         />
+
+                        {/* [BARU] Quick Instructions Chips */}
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                            {quickInstructions.map((text) => (
+                                <Badge
+                                    key={text}
+                                    variant="outline"
+                                    className="cursor-pointer hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors font-normal text-xs py-1"
+                                    onClick={() => addInstruction(text)}
+                                >
+                                    + {text}
+                                </Badge>
+                            ))}
+                        </div>
+
                         <InputError message={errors.instruksi} />
                     </div>
 
                     <div className="space-y-2">
                         <Label className="flex items-center gap-2">
-                            Batas Waktu <span className="text-xs text-muted-foreground font-normal">(Opsional)</span>
+                            Batas Waktu Penyelesaian <span className="text-xs text-muted-foreground font-normal">(Opsional)</span>
                         </Label>
                         <Input
                             type="date"
                             value={data.batas_waktu}
                             onChange={e => setData('batas_waktu', e.target.value)}
+                            className="w-full md:w-1/2"
                         />
                     </div>
 
                     {data.sifat_disposisi === 'sangat_segera' && (
-                        <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 text-xs rounded-md border border-red-200">
+                        <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 text-xs rounded-md border border-red-200 animate-pulse">
                             <AlertCircle className="h-4 w-4" />
-                            Prioritas tinggi! Notifikasi khusus akan dikirim.
+                            <strong>Perhatian:</strong> Notifikasi "Sangat Segera" akan dikirim ke HP bawahan!
                         </div>
                     )}
 
-                    <DialogFooter className="gap-2 sm:gap-0">
+                    <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t mt-4">
                         <Button type="button" variant="secondary" onClick={onClose}>Batal</Button>
-                        <Button type="submit" disabled={processing || (bawahanList.length === 0 && !isLoadingBawahan)} className="bg-blue-600 hover:bg-blue-700">
+                        <Button
+                            type="submit"
+                            disabled={processing || (bawahanList.length === 0 && !isLoadingBawahan)}
+                            className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+                        >
                             <Send className="h-4 w-4 mr-2" />
-                            {isLoadingBawahan ? 'Memuat...' : 'Kirim Disposisi'}
+                            {isLoadingBawahan ? 'Memuat Data...' : 'Kirim Disposisi'}
                         </Button>
                     </DialogFooter>
                 </form>

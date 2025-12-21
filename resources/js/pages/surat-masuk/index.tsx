@@ -121,14 +121,12 @@ export default function SuratMasukIndex({ surats, users, bidangs, filters }: Pro
                     isOpen={isSuratModalOpen}
                     onClose={() => setisSuratModalOpen(false)}
                     editingData={editingSurat}
-                    bidangs={bidangs}
                 />
 
                 <DisposisiModal
                     isOpen={isDisposisiModalOpen}
                     onClose={() => setIsDisposisiModalOpen(false)}
                     surat={selectedSuratForDisposisi}
-                    // users={users}
                 />
             </div>
         </AppLayout>

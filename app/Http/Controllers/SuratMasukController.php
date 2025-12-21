@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\SuratMasuk;
 use App\Models\FileScan;
-use App\Models\Bidang; // Jangan lupa import Bidang
+use App\Models\Bidang;
 use App\Services\TrackingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,62 +19,38 @@ class SuratMasukController extends Controller
     {
         $user = auth()->user();
 
-        // Load relasi bidang penerima agar tahu ini surat nyasar ke mana
+        // Eager Load relasi yang diperlukan
         $query = SuratMasuk::with(['fileScan', 'bidangPenerima'])
-            ->latest('tgl_terima');
+            ->latest('tgl_terima')
+            ->latest('created_at'); // Urutan cadangan biar stabil
 
-        // --- FILTER HAK AKSES SURAT ---
-
-        // 1. Super Admin, Level 1 (Kaban), & Sekretariat (Biasanya Level 2 dengan kode SEK)
-        // Mereka bisa melihat SEMUA surat (Fungsi Pengawasan/Umum)
+        // LOGIKA HAK AKSES MELIHAT SURAT
         $isSekretariat = $user->bidang && $user->bidang->kode === 'SEK';
 
         if ($user->role === 'super_admin' || $user->role === 'level_1' || $isSekretariat) {
-            // Level admin super Bisa lihat semua, tidak di-filter.
-        }
-        else {
-            // 2. Bidang Teknis / Staf (Hanya lihat yg relevan)
-            $query->where(function($q) use ($user) {
-                // A. Surat yang TUJUAN AWALNYA ke bidang saya (Bypass)
+            // 1. Admin, Kaban, & Sekretariat BISA LIHAT SEMUA SURAT
+        } else {
+            // 2. Bidang Lain / Staff HANYA LIHAT surat milik bidangnya atau disposisi ke dia
+            $query->where(function ($q) use ($user) {
                 $q->where('id_bidang_penerima', $user->id_bidang)
-
-                // B. ATAU Surat umum yang tujuannya NULL (Masuk lewat Kaban/Sekretariat)
-                // TAPI hanya jika sudah didisposisikan ke saya atau bawahan saya
-                  ->orWhereHas('disposisi', function($d) use ($user) {
-                      // Cek apakah ada disposisi yang mengarah ke user ini
-                      $d->where('ke_user_id', $user->id);
-                  })
-
-                  // ATAU saya yang input suratnya
-                  ->orWhere('id_user_input', $user->id);
+                    ->orWhereHas('disposisi', function ($d) use ($user) {
+                        $d->where('ke_user_id', $user->id);
+                    })
+                    ->orWhere('id_user_input', $user->id);
             });
         }
 
-        // --- FILTER PENCARIAN ---
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('perihal', 'like', "%{$request->search}%")
                     ->orWhere('pengirim', 'like', "%{$request->search}%")
                     ->orWhere('no_surat', 'like', "%{$request->search}%")
-                    ->orWhere('kode_klasifikasi', 'like', "%{$request->search}%") // Bisa cari kode
                     ->orWhere('no_agenda', 'like', "%{$request->search}%");
             });
         }
 
-        $surats = $query->paginate(10)->withQueryString();
-
-        // Data untuk Modal (User & Daftar Bidang untuk tujuan surat)
-        $users = User::where('id', '!=', auth()->id())
-            ->where('status_aktif', true)
-            ->select('id', 'name', 'jabatan', 'role')
-            ->get();
-
-        $bidangs = Bidang::select('id', 'nama_bidang')->get();
-
         return Inertia::render('surat-masuk/index', [
-            'surats' => $surats,
-            'users' => $users,
-            'bidangs' => $bidangs, // Kirim list bidang ke frontend
+            'surats' => $query->paginate(10)->withQueryString(),
             'filters' => $request->only(['search']),
         ]);
     }
@@ -82,28 +58,36 @@ class SuratMasukController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            // 'no_agenda' => 'nullable|string|max:50',
-            'kode_klasifikasi' => 'nullable|string|max:20', // [BARU]
-            'id_bidang_penerima' => 'nullable|exists:bidang,id', // [BARU]
+            'kode_klasifikasi' => 'nullable|string|max:20',
             'no_surat' => 'required|string|max:100|unique:surat_masuk',
             'tgl_surat' => 'required|date',
             'tgl_terima' => 'required|date',
             'pengirim' => 'required|string|max:255',
-            'perihal' => 'required|string|max:255',
+            'perihal' => 'required|string|max:500', // Perihal panjang ok
             'ringkasan' => 'nullable|string',
             'sifat_surat' => 'required|in:biasa,penting,rahasia',
             'media' => 'required|in:fisik,digital',
             'file_scan' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
-        $validated['id_user_input'] = auth()->id();
+        $user = auth()->user();
+        $validated['id_user_input'] = $user->id;
         $validated['status_surat'] = 'baru';
 
-        DB::transaction(function () use ($validated, $request) {
+        // [LOGIKA BARU] Penentuan Unit Penerima
+        // Jika User punya bidang, masuk ke bidangnya.
+        // Jika User NULL bidang (Admin/Kaban), default masuk ke SEKRETARIAT.
+        if ($user->id_bidang) {
+            $validated['id_bidang_penerima'] = $user->id_bidang;
+        } else {
+            $sekretariat = Bidang::where('kode', 'SEK')->orWhere('nama_bidang', 'like', '%Sekretariat%')->first();
+            $validated['id_bidang_penerima'] = $sekretariat ? $sekretariat->id : null;
+        }
 
-            // Generate No Agenda Otomatis
-            $validated['no_agenda'] = $this->generateNoAgenda(
-                $validated['id_bidang_penerima'] ?? null,
+        DB::transaction(function () use ($validated, $request) {
+            // Generate Agenda
+            $validated['no_agenda'] = $this->generateSmartAgenda(
+                $validated['id_bidang_penerima'],
                 $validated['tgl_terima']
             );
 
@@ -113,7 +97,6 @@ class SuratMasukController extends Controller
             if ($request->hasFile('file_scan')) {
                 $file = $request->file('file_scan');
                 $path = $file->store('uploads/surat-masuk', 'public');
-
                 FileScan::create([
                     'id_surat' => $surat->id,
                     'nama_file' => $file->getClientOriginalName(),
@@ -123,45 +106,46 @@ class SuratMasukController extends Controller
                 ]);
             }
 
-            TrackingService::record(
-                $surat->id,
-                'input',
-                'Surat masuk dicatat.' . ($surat->id_bidang_penerima ? ' (Langsung ke Bidang)' : ' (Jalur Umum)')
-            );
+            TrackingService::record($surat->id, 'input', "Surat dicatat dengan No Agenda: {$surat->no_agenda}");
         });
 
         return redirect()->back()->with('success', 'Surat masuk berhasil dicatat.');
-
     }
 
-    // Generator Nomor Agenda
-    private function generateNoAgenda($idBidang, $tglTerima)
+    private function generateSmartAgenda($idBidang, $tglTerima)
     {
-        // 1. Ambil Tahun dari Tanggal Terima
         $tahun = Carbon::parse($tglTerima)->year;
 
-        // 2. Cari nomor terakhir di Database
-        // Syarat: Tahun sama DAN Bidang sama
-        $lastNo = SuratMasuk::whereYear('tgl_terima', $tahun)
-            ->where('id_bidang_penerima', $idBidang)
-            ->selectRaw('MAX(CAST(no_agenda as UNSIGNED)) as max_no') // Ambil angka tertinggi
-            ->value('max_no');
+        $kodeBidang = 'UM';
 
-        // 3. Tambah 1
-        $newNo = ($lastNo ?? 0) + 1;
+        if ($idBidang) {
+            $bidang = Bidang::find($idBidang);
+            if ($bidang) {
+                $kodeBidang = $bidang->kode ?? strtoupper(substr($bidang->nama_bidang, 0, 3));
+            }
+        }
 
-        // 4. (Opsional) Format jadi string, misal "001"
-        // Kalau mau polos angka saja, cukup return $newNo;
-        return str_pad($newNo, 3, '0', STR_PAD_LEFT); // Hasil: 001, 002, 010
+        $pattern = "%/{$kodeBidang}/{$tahun}";
+
+        $lastSurat = SuratMasuk::where('no_agenda', 'like', $pattern)
+            ->orderBy('id', 'desc')
+            ->first();
+
+        $nextNo = 1;
+        if ($lastSurat) {
+            $parts = explode('/', $lastSurat->no_agenda);
+            if (isset($parts[0]) && is_numeric($parts[0])) {
+                $nextNo = intval($parts[0]) + 1;
+            }
+        }
+
+        $nomorUrut = str_pad($nextNo, 3, '0', STR_PAD_LEFT);
+        return "{$nomorUrut}/{$kodeBidang}/{$tahun}";
     }
 
-    /**
-     * Update data surat & Ganti File jika ada
-     */
     public function update(Request $request, SuratMasuk $suratMasuk)
     {
         $validated = $request->validate([
-            // 'no_agenda' => 'nullable|string|max:50',
             'kode_klasifikasi' => 'nullable|string|max:20',
             'id_bidang_penerima' => 'nullable|exists:bidang,id',
             'no_surat' => 'required|string|max:100|unique:surat_masuk,no_surat,' . $suratMasuk->id,
@@ -176,23 +160,16 @@ class SuratMasukController extends Controller
         ]);
 
         DB::transaction(function () use ($validated, $request, $suratMasuk) {
-            $suratData = collect($validated)
-                ->except(['file_scan', 'no_agenda'])
-                ->toArray();
-
+            $suratData = collect($validated)->except(['file_scan', 'no_agenda'])->toArray();
             $suratMasuk->update($suratData);
 
             if ($request->hasFile('file_scan')) {
                 foreach ($suratMasuk->fileScan as $oldFile) {
-                    if (Storage::disk('public')->exists($oldFile->path_file)) {
-                        Storage::disk('public')->delete($oldFile->path_file);
-                    }
+                    if (Storage::disk('public')->exists($oldFile->path_file)) Storage::disk('public')->delete($oldFile->path_file);
                     $oldFile->delete();
                 }
-
                 $file = $request->file('file_scan');
                 $path = $file->store('uploads/surat-masuk', 'public');
-
                 FileScan::create([
                     'id_surat' => $suratMasuk->id,
                     'nama_file' => $file->getClientOriginalName(),
@@ -201,13 +178,13 @@ class SuratMasukController extends Controller
                     'ukuran_file' => $file->getSize(),
                 ]);
             }
-
             TrackingService::record($suratMasuk->id, 'edit', 'Data surat diperbarui');
         });
 
         return redirect()->back()->with('success', 'Data surat berhasil diperbarui.');
     }
 
+    // Hapus metode
     public function destroy(SuratMasuk $suratMasuk)
     {
         foreach ($suratMasuk->fileScan as $file) {
@@ -216,23 +193,12 @@ class SuratMasukController extends Controller
             }
         }
         $suratMasuk->delete();
-
         return redirect()->back()->with('success', 'Surat dihapus.');
     }
 
     public function show(SuratMasuk $suratMasuk)
     {
-        $suratMasuk->load([
-            'fileScan',
-            'logTrackings.user',
-            'disposisi.dariUser',
-            'disposisi.keUser',
-            'disposisi.children',
-            'bidangPenerima'
-        ]);
-
-        return Inertia::render('surat-masuk/show', [
-            'surat' => $suratMasuk
-        ]);
+        $suratMasuk->load(['fileScan', 'logTrackings.user', 'disposisi.dariUser', 'disposisi.keUser', 'disposisi.children', 'bidangPenerima']);
+        return Inertia::render('surat-masuk/show', ['surat' => $suratMasuk]);
     }
 }

@@ -14,8 +14,8 @@ class Bidang extends Model
     protected $fillable = [
         'nama_bidang',
         'kode',
-        'parent_id', // [BARU]
-        'urutan'     // [BARU]
+        'parent_id',
+        'urutan'
     ];
 
     // Relasi ke User (Anggota Bidang)
@@ -33,6 +33,6 @@ class Bidang extends Model
     // Relasi ke Anak (Misal: Bidang ke Sub-Bidang)
     public function children()
     {
-        return $this->hasMany(Bidang::class, 'parent_id');
+        return $this->hasMany(Bidang::class, 'parent_id')->with('children');
     }
 }
