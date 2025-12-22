@@ -60,7 +60,6 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                                 <SidebarMenuSubItem key={subItem.title}>
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        // Highlight anak yang sedang dikunjungi
                                                         isActive={isUrlActive(subItem.href)}
                                                     >
                                                         <Link href={subItem.href}>
@@ -76,7 +75,6 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                         );
                     }
 
-                    // Render item biasa (tanpa submenu)
                     return (
                         <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton

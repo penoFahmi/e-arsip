@@ -18,7 +18,6 @@ export default function AppLogo() {
                     <AppLogoIcon className="size-5 fill-current text-white dark:text-black" />
                 )}
             </div>
-            {/* PERBAIKAN DI SINI: Ubah text-center jadi text-left */}
             <div className="ml-2 grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-bold">
                     {app_config?.name || 'Sistem Surat'}

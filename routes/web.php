@@ -20,7 +20,6 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-// GROUP 1: User yang sudah Login (Middleware 'auth')
 Route::middleware(['auth'])->group(function () {
 
     Route::name('setup.email.')->group(function () {

@@ -9,12 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 interface Props extends PageProps {
-    surat: any; // Menggunakan any agar fleksibel dengan relasi yg banyak
+    surat: any;
 }
 
 export default function SuratMasukShow({ surat }: Props) {
 
-    // Helper Icon Tracking
     const getTrackingIcon = (aksi: string) => {
         switch(aksi) {
             case 'input': return <FileText className="h-4 w-4 text-blue-600" />;
@@ -37,7 +36,6 @@ export default function SuratMasukShow({ surat }: Props) {
 
             <div className="flex flex-col gap-6 p-4">
 
-                {/* Header Back */}
                 <div>
                     <Link href="/surat-masuk">
                         <Button variant="ghost" size="sm" className="pl-0 hover:pl-2 transition-all">
@@ -48,10 +46,8 @@ export default function SuratMasukShow({ surat }: Props) {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                    {/* KOLOM KIRI: Detail & File (2/3 layar) */}
                     <div className="lg:col-span-2 space-y-6">
 
-                        {/* Kartu Detail */}
                         <div className="bg-white border rounded-xl p-6 shadow-sm">
                             <div className="flex justify-between items-start mb-4">
                                 <h1 className="text-xl font-bold text-gray-900">{surat.perihal}</h1>
@@ -87,7 +83,6 @@ export default function SuratMasukShow({ surat }: Props) {
                             )}
                         </div>
 
-                        {/* Preview File */}
                         <div className="bg-white border rounded-xl p-6 shadow-sm h-[600px] flex flex-col">
                             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <File className="h-4 w-4" /> Lampiran Surat
@@ -108,7 +103,6 @@ export default function SuratMasukShow({ surat }: Props) {
                         </div>
                     </div>
 
-                    {/* KOLOM KANAN: Timeline Tracking (1/3 layar) */}
                     <div className="lg:col-span-1">
                         <div className="bg-white border rounded-xl p-6 shadow-sm sticky top-6">
                             <h3 className="font-semibold text-gray-900 mb-6 flex items-center gap-2">
@@ -118,7 +112,7 @@ export default function SuratMasukShow({ surat }: Props) {
                             <div className="relative border-l-2 border-gray-100 ml-3 space-y-8">
                                 {surat.log_trackings && surat.log_trackings.map((log: any, index: number) => (
                                     <div key={log.id} className="relative pl-8">
-                                        {/* Dot Indikator */}
+
                                         <div className="absolute -left-[9px] top-0 bg-white p-1 rounded-full border border-gray-200">
                                             {getTrackingIcon(log.aksi)}
                                         </div>

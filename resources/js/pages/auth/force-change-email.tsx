@@ -1,6 +1,5 @@
 import { FormEventHandler } from 'react';
 import { useForm, Head } from '@inertiajs/react';
-// Import route helper dari Wayfinder (pastikan path ini benar sesuai struktur foldermu)
 import { update } from '@/routes/setup/email';
 
 export default function ForceChangeEmail() {
@@ -11,11 +10,6 @@ export default function ForceChangeEmail() {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-
-        // PERBAIKAN UTAMA DI SINI:
-        // Gunakan update.url() dengan tanda kurung ()
-        // Agar menghasilkan string: "/setup-email"
-        // JANGAN LUPA tanda kurung-nya!
         put(update.url());
     };
 
@@ -36,7 +30,6 @@ export default function ForceChangeEmail() {
                 </div>
 
                 <form onSubmit={submit}>
-                    {/* Input Email Baru */}
                     <div className="mb-4">
                         <label className="block font-medium text-sm text-gray-700" htmlFor="email">
                             Email Baru (Aktif)
@@ -55,8 +48,6 @@ export default function ForceChangeEmail() {
                             <div className="text-red-600 text-sm mt-1">{errors.email}</div>
                         )}
                     </div>
-
-                    {/* Konfirmasi Password */}
                     <div className="mb-4">
                         <label className="block font-medium text-sm text-gray-700" htmlFor="password">
                             Konfirmasi Password Saat Ini

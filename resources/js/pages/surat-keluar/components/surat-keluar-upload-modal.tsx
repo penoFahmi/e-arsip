@@ -1,8 +1,8 @@
 import { FormEventHandler, useRef } from 'react';
-import { useForm } from '@inertiajs/react'; // Perhatikan: pakai useForm standard karena upload file khusus
+import { useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Camera, Upload, Image as ImageIcon } from 'lucide-react';
+import { Camera, Image as ImageIcon } from 'lucide-react';
 import { SuratKeluarData } from '../types';
 
 interface Props {
@@ -24,7 +24,6 @@ export default function SuratKeluarUploadModal({ isOpen, onClose, surat }: Props
         e.preventDefault();
         if (!surat || !data.file_bukti) return;
 
-        // Post ke route khusus upload-bukti
         post(`/surat-keluar/${surat.id}/upload-bukti`, {
             onSuccess: () => {
                 reset();
@@ -46,7 +45,6 @@ export default function SuratKeluarUploadModal({ isOpen, onClose, surat }: Props
 
                 <form onSubmit={submit} className="space-y-4 py-2">
 
-                    {/* PREVIEW IMAGE (Jika sudah pilih file) */}
                     {data.file_bukti ? (
                         <div className="aspect-video bg-gray-100 rounded-lg border-2 border-dashed flex flex-col items-center justify-center relative overflow-hidden">
                             <img
@@ -66,7 +64,6 @@ export default function SuratKeluarUploadModal({ isOpen, onClose, surat }: Props
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 gap-3">
-                            {/* TOMBOL KAMERA (Mobile Friendly) */}
                             <div
                                 className="aspect-square bg-orange-50 border-2 border-orange-200 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-orange-100 active:scale-95 transition-all"
                                 onClick={() => cameraInputRef.current?.click()}
@@ -75,7 +72,6 @@ export default function SuratKeluarUploadModal({ isOpen, onClose, surat }: Props
                                 <span className="text-xs font-bold text-orange-700">Buka Kamera</span>
                             </div>
 
-                            {/* TOMBOL GALERI */}
                             <div
                                 className="aspect-square bg-gray-50 border-2 border-gray-200 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 active:scale-95 transition-all"
                                 onClick={() => fileInputRef.current?.click()}
@@ -86,7 +82,6 @@ export default function SuratKeluarUploadModal({ isOpen, onClose, surat }: Props
                         </div>
                     )}
 
-                    {/* Hidden Inputs */}
                     <input
                         type="file"
                         ref={cameraInputRef}

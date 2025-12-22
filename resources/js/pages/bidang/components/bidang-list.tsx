@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Trash2, Building2, Users, ChevronRight, ChevronDown, Plus, LayoutGrid } from 'lucide-react';
+import { Pencil, Trash2, Building2, Users, ChevronRight, ChevronDown, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -9,7 +9,7 @@ interface Props {
     data: BidangData[];
     onEdit: (bidang: BidangData) => void;
     onDelete: (id: number) => void;
-    onAddSub: (parentId: number, parentName: string) => void; // [PENTING] Fungsi tambah anak
+    onAddSub: (parentId: number, parentName: string) => void;
 }
 
 export default function BidangList({ data, onEdit, onDelete, onAddSub }: Props) {
@@ -47,17 +47,17 @@ function BidangItem({ item, level, onEdit, onDelete, onAddSub }: {
     onAddSub: (id: number, name: string) => void;
 }) {
     const hasChildren = item.children && item.children.length > 0;
-    const [isExpanded, setIsExpanded] = useState(true); // Default terbuka semua biar admin liat semua
+    const [isExpanded, setIsExpanded] = useState(true);
 
     return (
         <div className={cn(
             "rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden transition-all",
             level > 0 ? "mt-2 border-l-4 border-l-primary/20 ml-4 sm:ml-8" : "mb-4 border-l-4 border-l-primary"
         )}>
-            {/* Baris Konten */}
+
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 gap-3 bg-white dark:bg-zinc-900">
                 <div className="flex items-start gap-3 w-full sm:w-auto">
-                    {/* Tombol Buka Tutup (Hanya jika punya anak) */}
+
                     <button
                         onClick={() => setIsExpanded(!isExpanded)}
                         disabled={!hasChildren}
@@ -89,9 +89,8 @@ function BidangItem({ item, level, onEdit, onDelete, onAddSub }: {
                     </div>
                 </div>
 
-                {/* Tombol Aksi */}
                 <div className="flex items-center gap-1 self-end sm:self-center w-full sm:w-auto justify-end border-t sm:border-t-0 pt-2 sm:pt-0 mt-2 sm:mt-0">
-                    {/* TOMBOL PINTAR: Tambah Sub */}
+                    
                     <Button
                         variant="outline"
                         size="sm"
@@ -111,14 +110,13 @@ function BidangItem({ item, level, onEdit, onDelete, onAddSub }: {
                 </div>
             </div>
 
-            {/* Area Anak (Rekursif) */}
             {hasChildren && isExpanded && (
                 <div className="bg-slate-50/50 dark:bg-slate-900/20 p-2 border-t">
                     {item.children?.map((child) => (
                         <BidangItem
                             key={child.id}
                             item={child}
-                            level={level + 1} // Level bertambah
+                            level={level + 1}
                             onEdit={onEdit}
                             onDelete={onDelete}
                             onAddSub={onAddSub}

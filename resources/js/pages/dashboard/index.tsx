@@ -35,24 +35,20 @@ export default function Dashboard({ stats, recents, agendas }: DashboardProps) {
 
             <div className="flex flex-col gap-6 p-4 md:p-6">
 
-                {/* 1. Banner Ucapan */}
                 <DashboardGreeting
                     user={auth.user}
                     countDisposisi={stats.disposisi_masuk}
                 />
 
-                {/* 2. Grid Statistik */}
                 <DashboardStats
                     stats={stats}
                     isSuperAdmin={isSuperAdmin}
                 />
 
-                {/* 3. Grid Agenda & Surat Terbaru */}
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                    {/* Agenda Component (Takes 2 Columns) */}
+
                     <DashboardAgenda agendas={agendas} />
 
-                    {/* Recent Mail Component (Takes 1 Column) */}
                     <DashboardRecent recents={recents} />
                 </div>
 

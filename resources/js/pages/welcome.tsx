@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { PageProps } from '@/types';
-import { Github, Instagram, ArrowRight, FileText, ShieldCheck, Database, GraduationCap, Building2 } from 'lucide-react';
+import { Github, Instagram, ArrowRight, FileText, ShieldCheck, GraduationCap, Building2 } from 'lucide-react';
 
 export default function Welcome({ auth }: PageProps<{ laravelVersion: string; phpVersion: string }>) {
     return (
@@ -9,7 +9,6 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
 
             <div className="bg-gray-50 text-black/50 dark:bg-black dark:text-white/50 min-h-screen flex flex-col justify-between selection:bg-red-500 selection:text-white font-sans">
 
-                {/* BACKGROUND DEKORATIF */}
                 <div className="relative w-full max-w-2xl px-6 lg:max-w-7xl">
                     <img
                         className="absolute -top-20 left-1/2 -z-10 -translate-x-1/2 opacity-10 dark:opacity-40"
@@ -18,7 +17,6 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                     />
                 </div>
 
-                {/* HEADER */}
                 <header className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
                     <div className="flex items-center gap-2 font-bold text-xl text-black dark:text-white">
                         <div className="bg-red-600 p-1.5 rounded-lg">
@@ -45,11 +43,9 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                     </nav>
                 </header>
 
-                {/* MAIN CONTENT */}
                 <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-12">
                     <div className="max-w-4xl space-y-8">
 
-                        {/* Badge Project Info */}
                         <div className="inline-flex flex-col sm:flex-row items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-gray-200 shadow-sm text-xs font-medium text-gray-600 dark:bg-gray-900 dark:border-gray-800 dark:text-gray-300">
                             <span className="flex items-center gap-1.5">
                                 <span className="relative flex h-2 w-2">
@@ -62,7 +58,6 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                             <span>Teknik Informatika 2025</span>
                         </div>
 
-                        {/* Hero Title */}
                         <h1 className="text-5xl sm:text-7xl font-black tracking-tight text-gray-900 dark:text-white leading-[1.1]">
                             Digitalisasi Arsip <br/>
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-red-600">
@@ -70,13 +65,11 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                             </span>
                         </h1>
 
-                        {/* Description */}
                         <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
                             Sistem informasi manajemen surat masuk dan disposisi digital yang dirancang khusus untuk meningkatkan efisiensi administrasi di
                             <strong className="text-gray-900 dark:text-white"> Badan Keuangan Daerah (BKAD)</strong>.
                         </p>
 
-                        {/* Action Buttons */}
                         <div className="flex flex-wrap justify-center gap-4 pt-4">
                             {auth.user ? (
                                 <Link href={'/dashboard'}>
@@ -93,9 +86,7 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                             )}
                         </div>
 
-                        {/* Credits / Academic Info */}
                         <div className="mt-12 pt-8 border-t border-gray-200/60 dark:border-gray-800 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
-                            {/* Mahasiswa */}
                             <div className="flex items-start gap-3 p-4 rounded-xl bg-white/50 border border-gray-100 dark:bg-gray-900/50 dark:border-gray-800">
                                 <div className="bg-blue-100 p-2 rounded-lg text-blue-600 dark:bg-blue-900/30">
                                     <GraduationCap className="w-5 h-5" />
@@ -107,7 +98,6 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                                 </div>
                             </div>
 
-                            {/* DPL */}
                             <div className="flex items-start gap-3 p-4 rounded-xl bg-white/50 border border-gray-100 dark:bg-gray-900/50 dark:border-gray-800">
                                 <div className="bg-purple-100 p-2 rounded-lg text-purple-600 dark:bg-purple-900/30">
                                     <Building2 className="w-5 h-5" />
@@ -119,7 +109,6 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                                 </div>
                             </div>
 
-                            {/* Mentor Lapangan */}
                             <div className="flex items-start gap-3 p-4 rounded-xl bg-white/50 border border-gray-100 dark:bg-gray-900/50 dark:border-gray-800">
                                 <div className="bg-green-100 p-2 rounded-lg text-green-600 dark:bg-green-900/30">
                                     <ShieldCheck className="w-5 h-5" />
@@ -134,7 +123,7 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
 
                     </div>
                 </main>
-                {/* FOOTER */}
+
                 <footer className="py-8 bg-white border-t border-gray-100 dark:bg-gray-950 dark:border-gray-900">
                     <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
 
@@ -143,12 +132,9 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                                 &copy; 2025 E-Arsip BKAD. Project Kerja Praktek.
                             </p>
 
-                            {/* IDENTITAS DEVELOPER DENGAN LOGO */}
                             <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
                                 <span className="text-xs text-gray-400">Powered by</span>
                                 <div className="flex items-center gap-1.5 font-bold text-gray-900 dark:text-white">
-                                    {/* Ganti src dengan file logo yang sudah kamu crop */}
-                                    {/* Jika belum ada file, kita pakai Icon sementara yang mirip */}
                                     <img src="/apple-touch-icon.png" className="w-6 h-auto" alt="ElHalc8n" />
                                     <span>ElHalc8n</span>
                                 </div>

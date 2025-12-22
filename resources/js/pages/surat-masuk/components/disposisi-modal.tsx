@@ -3,10 +3,10 @@ import { useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge'; // Import Badge
+import { Badge } from '@/components/ui/badge';
 import InputError from '@/components/input-error';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Send, AlertCircle, Sparkles, UserCheck } from 'lucide-react'; // Icon baru
+import { Send, AlertCircle, Sparkles, UserCheck } from 'lucide-react';
 import { SuratData } from '../types';
 
 interface Bawahan {
@@ -26,7 +26,6 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
     const [bawahanList, setBawahanList] = useState<Bawahan[]>([]);
     const [isLoadingBawahan, setIsLoadingBawahan] = useState(false);
 
-    // [BARU] Daftar Template Instruksi yang sering dipakai
     const quickInstructions = [
         "Mohon ditindaklanjuti",
         "Untuk diketahui",
@@ -66,9 +65,7 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
         }
     }, [isOpen, surat]);
 
-    // Fungsi menambah instruksi cepat
     const addInstruction = (text: string) => {
-        // Jika sudah ada teks, tambahkan koma
         const current = data.instruksi;
         const separator = current.length > 0 ? ", " : "";
         setData('instruksi', current + separator + text);
@@ -166,7 +163,6 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                             placeholder="Ketik instruksi manual disini..."
                         />
 
-                        {/* [BARU] Quick Instructions Chips */}
                         <div className="flex flex-wrap gap-1.5 mt-2">
                             {quickInstructions.map((text) => (
                                 <Badge

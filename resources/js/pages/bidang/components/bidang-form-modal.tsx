@@ -11,7 +11,7 @@ interface Props {
     isOpen: boolean;
     onClose: () => void;
     editingData: BidangData | null;
-    parentData: { id: number; nama: string } | null; // Data Induk
+    parentData: { id: number; nama: string } | null; 
 }
 
 export default function BidangFormModal({ isOpen, onClose, editingData, parentData }: Props) {
@@ -32,7 +32,6 @@ export default function BidangFormModal({ isOpen, onClose, editingData, parentDa
                 });
             } else {
                 reset();
-                // Jika parentData ada, otomatis set parent_id
                 if (parentData) {
                     setData('parent_id', String(parentData.id));
                 }
@@ -57,7 +56,6 @@ export default function BidangFormModal({ isOpen, onClose, editingData, parentDa
                 </DialogHeader>
 
                 <form onSubmit={submit} className="grid gap-4 py-4">
-                    {/* Fitur Pintar: Tampilkan Induk secara Read-Only jika mode tambah sub */}
                     {parentData && !editingData && (
                         <div className="bg-blue-50 border border-blue-100 p-3 rounded-md">
                             <Label className="text-xs text-blue-600 font-semibold">Induk Unit (Atasan)</Label>

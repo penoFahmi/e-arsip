@@ -28,11 +28,9 @@ import {
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
-    // 1. Ambil data User yang sedang login
     const { auth } = usePage<SharedData>().props;
     const user = auth.user;
 
-    // 2. Definisikan Menu Dasar (Semua orang bisa lihat)
     const dashboardMenu: NavItem[] = [
         {
             title: 'Dashboard',
@@ -41,7 +39,6 @@ export function AppSidebar() {
         },
     ];
 
-    // 3. Menu Surat (Untuk Staff, Admin Bidang, Pimpinan)
     const suratMenu: NavItem[] = [
         {
             title: 'Surat Masuk',
@@ -60,30 +57,29 @@ export function AppSidebar() {
         },
     ];
 
-    // 4. Menu Khusus Administrator (Hanya Super Admin)
     const adminMenu: NavItem[] = [
         {
             title: 'Manajemen User',
-            href: '/users', // Route ke CRUD User
+            href: '/users',
             icon: Users,
         },
         {
             title: 'Manajemen Bidang',
-            href: '/bidang', // Route ke CRUD Bidang
+            href: '/bidang', 
             icon: Folder,
         },
         {
             title: 'Pengaturan Aplikasi',
-            href: '#', // Route ke Form Upload Logo (White-label)
+            href: '#',
             icon: Settings,
-            items: [ // Submenu
+            items: [
                 {
-                    title: 'Identitas Aplikasi', // Ke file AppSettings kamu
+                    title: 'Identitas Aplikasi',
                     href: '/settings/app',
                     icon: Monitor
                 },
                 {
-                    title: 'Label Disposisi', // Ke file DisposisiSettings baru
+                    title: 'Label Disposisi',
                     href: '/settings/disposisi',
                     icon: FileText
                 }
@@ -91,20 +87,14 @@ export function AppSidebar() {
         },
     ];
 
-    // 5. Gabungkan Menu Berdasarkan Role
     let navItems: NavItem[] = [...dashboardMenu];
 
-    // Jika user BUKAN super admin, tampilkan menu surat (Opsional, tergantung alur)
-    // Atau tampilkan ke semua. Mari tampilkan ke semua dulu.
     navItems = [...navItems, ...suratMenu];
 
-    // Hanya Super Admin yang dapat menu Admin (User & Settings)
-    // Pastikan user.role ada di database dan types
     if (user.role === 'super_admin') {
         navItems = [...navItems, ...adminMenu];
     }
 
-    // Footer menu (Dokumentasi/Repo)
     const footerNavItems: NavItem[] = [
         {
             title: 'Dokumentasi',
@@ -128,7 +118,6 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                {/* Render Menu Dinamis */}
                 <NavMain items={navItems} />
             </SidebarContent>
 

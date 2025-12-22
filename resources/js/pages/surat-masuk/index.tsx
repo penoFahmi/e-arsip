@@ -7,7 +7,6 @@ import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-// Import komponen pecahan kita
 import { SuratData, UserLite, BidangOption } from './types';
 import SuratList from './components/surat-list';
 import SuratFormModal from './components/surat-form-modal';
@@ -21,14 +20,13 @@ interface Props extends PageProps {
 }
 
 export default function SuratMasukIndex({ surats, users, bidangs, filters }: Props) {
-    // --- STATE ---
+
     const [isSuratModalOpen, setisSuratModalOpen] = useState(false);
     const [editingSurat, setEditingSurat] = useState<SuratData | null>(null);
     const [isDisposisiModalOpen, setIsDisposisiModalOpen] = useState(false);
     const [selectedSuratForDisposisi, setSelectedSuratForDisposisi] = useState<SuratData | null>(null);
     const [search, setSearch] = useState(filters.search || '');
 
-    // --- HANDLERS ---
     const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             router.get('/surat-masuk', { search }, { preserveState: true });
@@ -67,17 +65,14 @@ export default function SuratMasukIndex({ surats, users, bidangs, filters }: Pro
 
             <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
 
-                {/* 1. Header & Search */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h2 className="text-xl font-semibold text-foreground">Agenda Surat Masuk</h2>
                         <p className="text-sm text-muted-foreground">Kelola arsip surat masuk dinas.</p>
                     </div>
 
-                    {/* Container Tombol & Search */}
                     <div className="flex w-full md:w-auto items-center gap-2">
 
-                        {/* Search Input */}
                         <div className="relative w-full md:w-64">
                             <Input
                                 placeholder="Cari No / Perihal..."
@@ -89,7 +84,6 @@ export default function SuratMasukIndex({ surats, users, bidangs, filters }: Pro
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         </div>
 
-                        {/* Tombol Export Agenda */}
                         <a
                             href="/laporan/agenda-surat-masuk"
                             target="_blank"
@@ -100,7 +94,6 @@ export default function SuratMasukIndex({ surats, users, bidangs, filters }: Pro
                             <span className="hidden md:inline">Export</span>
                         </a>
 
-                        {/* Tombol Input Surat */}
                         <Button onClick={openCreate} className="shrink-0">
                             <Plus className="h-4 w-4 md:mr-2" />
                             <span className="hidden md:inline">Input Surat</span>
@@ -108,7 +101,6 @@ export default function SuratMasukIndex({ surats, users, bidangs, filters }: Pro
                     </div>
                 </div>
 
-                {/* 2. Content List */}
                 <SuratList
                     data={surats.data}
                     onEdit={openEdit}
@@ -116,7 +108,6 @@ export default function SuratMasukIndex({ surats, users, bidangs, filters }: Pro
                     onDisposisi={openDisposisi}
                 />
 
-                {/* 3. Modals */}
                 <SuratFormModal
                     isOpen={isSuratModalOpen}
                     onClose={() => setisSuratModalOpen(false)}

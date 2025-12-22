@@ -2,7 +2,7 @@ import { User } from '@/types';
 import { Calendar as CalendarIcon } from 'lucide-react';
 
 interface Props {
-    user: any; // Atau tipe User yang spesifik
+    user: any;
     countDisposisi?: number;
 }
 
@@ -17,7 +17,6 @@ export default function DashboardGreeting({ user, countDisposisi }: Props) {
                         : "Tidak ada tugas mendesak. Sistem berjalan lancar."}
                 </p>
             </div>
-            {/* Hiasan Background */}
             <CalendarIcon className="absolute right-4 bottom-[-20px] h-32 w-32 text-white/5 rotate-12" />
         </div>
     );

@@ -16,7 +16,7 @@ import { UserData } from '../types';
 
 interface Props {
     data: UserData[];
-    from: number; // [BARU] Untuk nomor urut
+    from: number;
     onEdit: (user: UserData) => void;
     onDelete: (id: number) => void;
     filters: { role?: string; status?: string; };
@@ -45,7 +45,6 @@ export default function UserList({ data, from, onEdit, onDelete, filters, roleLa
 
     return (
         <div className="space-y-4">
-            {/* Toolbar Filter */}
             <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -85,14 +84,12 @@ export default function UserList({ data, from, onEdit, onDelete, filters, roleLa
                 )}
             </div>
 
-            {/* Tabel Data */}
             <div className="rounded-xl border border-sidebar-border/70 overflow-hidden bg-background shadow-sm">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-muted/50 text-muted-foreground border-b uppercase text-[10px] tracking-wider font-semibold">
                         <tr>
                             <th className="px-4 py-3 w-12 text-center">No</th>
                             <th className="px-4 py-3">Pegawai</th>
-                            {/* Hidden di HP, Muncul di Tablet/Desktop */}
                             <th className="hidden md:table-cell px-4 py-3">Jabatan & Role</th>
                             <th className="hidden lg:table-cell px-4 py-3">Unit Kerja</th>
                             <th className="px-4 py-3 text-center">Status</th>
@@ -103,18 +100,16 @@ export default function UserList({ data, from, onEdit, onDelete, filters, roleLa
                         {data.length > 0 ? (
                             data.map((user, index) => (
                                 <tr key={user.id} className="hover:bg-muted/50 transition-colors group">
-                                    {/* Kolom No Urut */}
+                                    
                                     <td className="px-4 py-4 text-center text-xs text-muted-foreground font-mono">
                                         {(from || 1) + index}
                                     </td>
 
-                                    {/* Kolom Informasi Utama (Pegawai) */}
                                     <td className="px-4 py-4 align-top">
                                         <div className="flex flex-col">
                                             <span className="font-medium text-foreground text-sm">{user.name}</span>
                                             <span className="text-xs text-muted-foreground font-mono mb-1">{user.username}</span>
 
-                                            {/* [MOBILE ONLY] Info Jabatan & Unit muncul disini kalau di HP */}
                                             <div className="md:hidden space-y-1 mt-1 border-t pt-1 border-dashed">
                                                 <div className="text-[10px] text-gray-600 flex items-center gap-1">
                                                     <Shield className="h-3 w-3 text-primary/70" />
@@ -128,7 +123,6 @@ export default function UserList({ data, from, onEdit, onDelete, filters, roleLa
                                         </div>
                                     </td>
 
-                                    {/* Kolom Jabatan (Desktop Only) */}
                                     <td className="hidden md:table-cell px-4 py-4 align-top">
                                         <div className="flex flex-col gap-0.5">
                                             <span className="text-xs font-medium text-foreground">{user.jabatan || '-'}</span>
@@ -140,7 +134,6 @@ export default function UserList({ data, from, onEdit, onDelete, filters, roleLa
                                         </div>
                                     </td>
 
-                                    {/* Kolom Unit (Desktop Only) */}
                                     <td className="hidden lg:table-cell px-4 py-4 align-top">
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                             <Building2 className="h-3.5 w-3.5 text-gray-400" />
@@ -148,7 +141,6 @@ export default function UserList({ data, from, onEdit, onDelete, filters, roleLa
                                         </div>
                                     </td>
 
-                                    {/* Kolom Status */}
                                     <td className="px-4 py-4 text-center align-top">
                                         <Badge
                                             variant={user.status_aktif ? "default" : "destructive"}
@@ -158,7 +150,6 @@ export default function UserList({ data, from, onEdit, onDelete, filters, roleLa
                                         </Badge>
                                     </td>
 
-                                    {/* Kolom Aksi */}
                                     <td className="px-4 py-4 text-right align-top">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>

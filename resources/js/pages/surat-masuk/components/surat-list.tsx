@@ -20,7 +20,6 @@ interface Props {
 
 export default function SuratList({ data, onEdit, onDelete, onDisposisi }: Props) {
 
-    // Helper Warna Badge
     const getSifatBadge = (sifat: string) => {
         switch (sifat) {
             case 'rahasia': return <Badge variant="destructive" className="uppercase text-[10px]">Rahasia</Badge>;
@@ -141,13 +140,11 @@ export default function SuratList({ data, onEdit, onDelete, onDisposisi }: Props
                 </Table>
             </div>
 
-            {/* --- TAMPILAN MOBILE (Card) --- */}
             <div className="flex flex-col gap-3 md:hidden">
                 {data.map((surat) => (
                     <Card key={surat.id} className="border-l-4 border-l-blue-600 shadow-sm overflow-hidden relative">
                         <CardHeader className="p-4 pb-2">
                             <div className="flex justify-between items-start">
-                                {/* Kiri: No Agenda & Badge Sifat */}
                                 <div className="flex items-center gap-2">
                                     <div className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
                                         {surat.no_agenda}
@@ -155,7 +152,6 @@ export default function SuratList({ data, onEdit, onDelete, onDisposisi }: Props
                                     {getSifatBadge(surat.sifat_surat)}
                                 </div>
 
-                                {/* Kanan: TOMBOL MENU (EDIT/HAPUS) DISINI */}
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-8 w-8 -mt-2 -mr-2">
@@ -179,7 +175,7 @@ export default function SuratList({ data, onEdit, onDelete, onDisposisi }: Props
                                 </DropdownMenu>
                             </div>
 
-                            <div className="mt-2 pr-6"> {/* pr-6 biar text gak nabrak menu */}
+                            <div className="mt-2 pr-6"> 
                                 <h4 className="text-sm font-bold text-gray-900 leading-tight line-clamp-2">
                                     {surat.perihal}
                                 </h4>

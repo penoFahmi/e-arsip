@@ -43,7 +43,6 @@ export default function SuratKeluarFormModal({ isOpen, onClose, editingData }: P
                 });
             } else {
                 reset();
-                // Default tanggal hari ini
                 setData('tgl_surat', new Date().toISOString().split('T')[0]);
             }
         }
@@ -77,7 +76,6 @@ export default function SuratKeluarFormModal({ isOpen, onClose, editingData }: P
 
                 <form onSubmit={submit} className="space-y-6 py-4">
 
-                    {/* BAGIAN 1: Data Utama (Wajib) */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
                             <Label>Tanggal Surat</Label>
@@ -112,7 +110,6 @@ export default function SuratKeluarFormModal({ isOpen, onClose, editingData }: P
                         </div>
                     </div>
 
-                    {/* BAGIAN 2: Finalisasi (Muncul saat Edit) */}
                     {editingData && (
                         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-4 animate-in slide-in-from-bottom-2">
                             <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 border-b pb-2">

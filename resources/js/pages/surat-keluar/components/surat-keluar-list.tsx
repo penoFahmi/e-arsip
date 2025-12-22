@@ -1,24 +1,24 @@
 import { Link } from '@inertiajs/react';
-import { Eye, Pencil, Trash2, Send, Calendar, Printer, Camera, CheckCircle, FileText } from 'lucide-react';
+import { Pencil, Trash2, Calendar, Camera, CheckCircle, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/components/ui/table';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { SuratKeluarData } from '../types';
 
 interface Props {
     data: SuratKeluarData[];
     onEdit: (surat: SuratKeluarData) => void;
     onDelete: (id: number) => void;
-    onUploadBukti: (surat: SuratKeluarData) => void; // Fungsi baru untuk upload tanda terima
+    onUploadBukti: (surat: SuratKeluarData) => void;
 }
 
 export default function SuratKeluarList({ data, onEdit, onDelete, onUploadBukti }: Props) {
 
     const getStatusBadge = (status: string) => {
-        switch(status) {
+        switch (status) {
             case 'draft': return <Badge variant="secondary" className="bg-gray-200 text-gray-700">Draft / Konsep</Badge>;
             case 'kirim': return <Badge className="bg-orange-500 hover:bg-orange-600 animate-pulse">Sedang Dikirim</Badge>;
             case 'diterima': return <Badge className="bg-green-600 hover:bg-green-700">Diterima</Badge>;
@@ -32,7 +32,6 @@ export default function SuratKeluarList({ data, onEdit, onDelete, onUploadBukti 
 
     return (
         <>
-            {/* DESKTOP VIEW */}
             <div className="hidden md:block rounded-xl border overflow-hidden bg-background">
                 <Table>
                     <TableHeader>

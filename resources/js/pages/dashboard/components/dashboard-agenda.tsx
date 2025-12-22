@@ -4,14 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 interface Props {
-    agendas: any[]; // Bisa diperjelas tipenya nanti
+    agendas: any[];
 }
 
 export default function DashboardAgenda({ agendas }: Props) {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-    // --- LOGIC KALENDER ---
     const normalizeDate = (dateString: string) => {
         if (!dateString) return '';
         return dateString.split('T')[0];
@@ -55,7 +54,7 @@ export default function DashboardAgenda({ agendas }: Props) {
 
             <CardContent className="p-0">
                 <div className="flex flex-col md:flex-row h-full">
-                    {/* WIDGET KALENDER (Kiri) */}
+
                     <div className="p-4 md:w-[320px] shrink-0 border-b md:border-b-0 md:border-r bg-slate-50/30">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-bold text-gray-700 capitalize">
@@ -103,7 +102,6 @@ export default function DashboardAgenda({ agendas }: Props) {
                         </div>
                     </div>
 
-                    {/* LIST AGENDA (Kanan) */}
                     <div className="flex-1 p-4 md:p-6 bg-white min-h-[300px]">
                         <h4 className="font-semibold text-gray-800 mb-4 flex items-center justify-between pb-2 border-b border-dashed">
                             <span className="flex items-center gap-2">

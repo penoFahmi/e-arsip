@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
-import { Search, FileSpreadsheet } from 'lucide-react'; // Tambah icon
+import { Search, FileSpreadsheet } from 'lucide-react';
 
 import AppLayout from '@/layouts/app-layout';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button'; // Import Button
+import { Button } from '@/components/ui/button'; 
 
 import { DisposisiData } from './types';
 import DisposisiList from './components/disposisi-list';
@@ -32,7 +32,6 @@ export default function DisposisiIndex({ disposisis, filters }: Props) {
         setIsUpdateModalOpen(true);
     };
 
-    // Fungsi Export
     const handleExport = () => {
         window.location.href = '/disposisi/export';
     };
@@ -43,7 +42,6 @@ export default function DisposisiIndex({ disposisis, filters }: Props) {
 
             <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
 
-                {/* Header & Search */}
                 <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                     <div>
                         <h2 className="text-xl font-semibold text-foreground">Disposisi Masuk</h2>
@@ -51,7 +49,6 @@ export default function DisposisiIndex({ disposisis, filters }: Props) {
                     </div>
 
                     <div className="flex w-full md:w-auto items-center gap-2">
-                         {/* TOMBOL EXPORT BARU */}
                          <Button
                             variant="outline"
                             className="gap-2 border-green-200 text-green-700 hover:bg-green-50"
@@ -74,7 +71,6 @@ export default function DisposisiIndex({ disposisis, filters }: Props) {
                     </div>
                 </div>
 
-                {/* List Content */}
                 <DisposisiList
                     data={disposisis.data}
                     onUpdateClick={openUpdateModal}

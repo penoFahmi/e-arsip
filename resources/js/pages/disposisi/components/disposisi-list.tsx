@@ -1,7 +1,7 @@
 import { Clock, FileText, User as UserIcon, AlertTriangle, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, FileCheck} from 'lucide-react';
+import { FileCheck } from 'lucide-react';
 import { DisposisiData } from '../types';
 
 interface Props {
@@ -11,7 +11,6 @@ interface Props {
 
 export default function DisposisiList({ data, onUpdateClick }: Props) {
 
-    // Badge Status Pengerjaan
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'terkirim': return <Badge variant="secondary">Baru</Badge>;
@@ -22,7 +21,6 @@ export default function DisposisiList({ data, onUpdateClick }: Props) {
         }
     };
 
-    // [BARU] Badge Sifat Disposisi (Penting/Segera)
     const getSifatBadge = (sifat: string) => {
         switch (sifat) {
             case 'sangat_segera': return <Badge variant="destructive" className="animate-pulse">SANGAT SEGERA</Badge>;
@@ -41,12 +39,11 @@ export default function DisposisiList({ data, onUpdateClick }: Props) {
     }
 
     return (
-        // RESPONSIVE: 1 Kolom di HP, 2 Kolom di Laptop (lg)
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {data.map((item) => (
                 <div key={item.id} className={`flex flex-col gap-3 p-5 rounded-xl border shadow-sm transition-all hover:shadow-md ${item.status_disposisi === 'terkirim' ? 'bg-white border-blue-300 ring-1 ring-blue-100' : 'bg-white border-gray-200'}`}>
 
-                    {/* Header Card: Sifat & Tanggal */}
                     <div className="flex justify-between items-start">
                         <div className="flex gap-2 items-center">
                             {getSifatBadge(item.sifat_disposisi)}
@@ -58,7 +55,6 @@ export default function DisposisiList({ data, onUpdateClick }: Props) {
                         </div>
                     </div>
 
-                    {/* Info Surat */}
                     <div className="pb-3 border-b border-dashed border-gray-100">
                         <h3 className="font-bold text-gray-900 leading-snug mb-1 line-clamp-2" title={item.surat.perihal}>
                             {item.surat.perihal}
@@ -68,9 +64,7 @@ export default function DisposisiList({ data, onUpdateClick }: Props) {
                         </div>
                     </div>
 
-                    {/* Isi Instruksi */}
                     <div className="flex-1 bg-gray-50 rounded-lg p-3 text-sm border border-gray-100">
-                        {/* Jika ada Parent (Disposisi Berantai) */}
                         {item.parent && (
                             <div className="flex items-center gap-1 text-xs text-gray-400 mb-1 italic">
                                 <span>{item.parent.dari_user.name}</span>
@@ -93,12 +87,10 @@ export default function DisposisiList({ data, onUpdateClick }: Props) {
                         )}
                     </div>
 
-                    {/* Footer: Status & Action */}
                     <div className="flex items-center justify-between pt-2 mt-auto">
                         {getStatusBadge(item.status_disposisi)}
 
                         <div className="flex gap-2">
-                            {/* 1. File Surat Asli */}
                             {item.surat.file_scan?.[0] && (
                                 <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground" asChild>
                                     <a href={`/storage/${item.surat.file_scan[0].path_file}`} target="_blank" title="Lihat Surat Asli">
@@ -107,7 +99,6 @@ export default function DisposisiList({ data, onUpdateClick }: Props) {
                                 </Button>
                             )}
 
-                            {/* 2. [BARU] File Hasil Tindak Lanjut */}
                             {item.file_tindak_lanjut && (
                                 <Button variant="outline" size="sm" className="h-8 text-xs border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800" asChild>
                                     <a href={`/storage/${item.file_tindak_lanjut}`} target="_blank" title="Lihat Laporan/Hasil">
@@ -116,7 +107,6 @@ export default function DisposisiList({ data, onUpdateClick }: Props) {
                                 </Button>
                             )}
 
-                            {/* 3. Tombol Tindak Lanjut */}
                             <Button
                                 size="sm"
                                 variant={item.status_disposisi === 'selesai' ? 'secondary' : 'default'}

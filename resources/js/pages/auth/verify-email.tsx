@@ -5,10 +5,9 @@ import AuthLayout from '@/layouts/auth-layout';
 import { logout } from '@/routes';
 import { send } from '@/routes/verification';
 import { Form, Head, usePage } from '@inertiajs/react';
-import { Mail, LogOut, ArrowRight } from 'lucide-react'; // Pastikan install lucide-react
+import { Mail, LogOut, ArrowRight } from 'lucide-react';
 
 export default function VerifyEmail({ status }: { status?: string }) {
-    // Mengambil data user yang sedang login untuk menampilkan emailnya
     const { auth } = usePage<any>().props;
 
     return (
@@ -20,7 +19,6 @@ export default function VerifyEmail({ status }: { status?: string }) {
 
             <div className="flex flex-col items-center justify-center space-y-6 text-center">
 
-                {/* Visual Icon - Modal Style */}
                 <div className="bg-blue-50 p-4 rounded-full">
                     <Mail className="w-10 h-10 text-blue-600" />
                 </div>
@@ -35,7 +33,6 @@ export default function VerifyEmail({ status }: { status?: string }) {
                     Silakan cek kotak masuk (inbox) atau folder spam Anda.
                 </div>
 
-                {/* Status Sukses Terkirim */}
                 {status === 'verification-link-sent' && (
                     <div className="w-full bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm font-medium animate-in fade-in slide-in-from-top-2">
                         Tautan verifikasi baru telah dikirim!

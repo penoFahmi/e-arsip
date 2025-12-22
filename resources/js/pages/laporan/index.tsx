@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Printer, FileSpreadsheet, CalendarRange } from 'lucide-react';
 
 export default function LaporanIndex() {
-    // Default tanggal: Awal bulan ini s/d Hari ini
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
 
@@ -16,7 +15,6 @@ export default function LaporanIndex() {
     const [tglAkhir, setTglAkhir] = useState(today.toISOString().split('T')[0]);
 
     const handlePrint = () => {
-        // Buka tab baru ke route cetak blade
         const url = `/laporan/cetak?tgl_awal=${tglAwal}&tgl_akhir=${tglAkhir}`;
         window.open(url, '_blank');
     };
@@ -71,7 +69,6 @@ export default function LaporanIndex() {
                                 Cetak PDF / Print
                             </Button>
 
-                            {/* Tombol Dummy dulu (Kalau mau implement export excel nanti) */}
                             <Button variant="outline" className="flex-1" disabled>
                                 <FileSpreadsheet className="mr-2 h-4 w-4" />
                                 Export Excel (Coming Soon)
@@ -81,7 +78,6 @@ export default function LaporanIndex() {
                     </CardContent>
                 </Card>
 
-                {/* Info Box */}
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
                     <strong>Catatan:</strong><br/>
                     Pastikan menonaktifkan "Pop-up Blocker" agar jendela cetak bisa terbuka otomatis.

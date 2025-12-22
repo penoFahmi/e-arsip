@@ -1,4 +1,4 @@
-import AppLogoIcon from '@/components/app-logo-icon'; // Gunakan Icon saja, bukan AppLogo full
+import AppLogoIcon from '@/components/app-logo-icon';
 import { Link, usePage } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
 import { SharedData } from '@/types';
@@ -13,18 +13,15 @@ export default function AuthLayout({
     title,
     description,
 }: PropsWithChildren<AuthLayoutProps>) {
-    // Kita ambil config nama aplikasi agar dinamis
     const { app_config } = usePage<SharedData>().props;
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 p-6 md:p-10">
             <div className="w-full max-w-md space-y-8">
 
-                {/* LOGO SECTION - Dibuat Manual agar Rata Tengah */}
                 <div className="flex flex-col items-center gap-2 text-center">
                     <Link href="/" className="flex flex-col items-center gap-2">
                         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                            {/* Jika ada logo image dari config, pakai itu. Jika tidak, pakai Icon default */}
                             {app_config?.logo ? (
                                 <img src={app_config.logo} alt="Logo" className="h-10 w-10 object-contain" />
                             ) : (
@@ -35,15 +32,13 @@ export default function AuthLayout({
                              <h1 className="text-2xl font-bold tracking-tight text-foreground">
                                 {app_config?.name || 'Sistem Surat'}
                              </h1>
-                             {/* Optional: Menampilkan nama instansi di bawah judul */}
-                             {/* <p className="text-sm text-muted-foreground font-medium">
+                             <p className="text-sm text-muted-foreground font-medium">
                                 {app_config?.instansi || 'BKAD Pontianak'}
-                             </p> */}
+                             </p>
                         </div>
                     </Link>
                 </div>
 
-                {/* CARD SECTION */}
                 <div className="flex flex-col gap-6 rounded-xl bg-card text-card-foreground p-6 shadow-sm border border-border">
                     <div className="flex flex-col items-center gap-2 text-center">
                         <h2 className="text-xl font-semibold">{title}</h2>

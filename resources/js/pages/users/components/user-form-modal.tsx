@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Briefcase, KeyRound } from 'lucide-react'; // Icon pemanis
+import { User, Shield, Briefcase, KeyRound } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -33,12 +33,11 @@ export default function UserFormModal({ isOpen, onClose, editingData, bidangs, r
         password_confirmation: '',
         role: 'staf',
         id_bidang: '',
-        jabatan: '', // [FIX] Tambahkan field jabatan
-        no_hp: '',   // [FIX] Tambahkan field no_hp
+        jabatan: '',
+        no_hp: '',  
         status_aktif: true,
     });
 
-    // State untuk toggle ganti password saat edit
     const [changePassword, setChangePassword] = useState(false);
 
     useEffect(() => {
@@ -60,7 +59,7 @@ export default function UserFormModal({ isOpen, onClose, editingData, bidangs, r
                 });
             } else {
                 reset();
-                setChangePassword(true); // Kalau baru, wajib isi password
+                setChangePassword(true);
             }
         }
     }, [isOpen, editingData]);
@@ -76,7 +75,6 @@ export default function UserFormModal({ isOpen, onClose, editingData, bidangs, r
         }
     };
 
-    // Helper: Deskripsi Role biar admin paham
     const getRoleDescription = (role: string) => {
         switch (role) {
             case 'super_admin': return 'Akses penuh ke seluruh sistem & pengaturan.';
@@ -91,7 +89,6 @@ export default function UserFormModal({ isOpen, onClose, editingData, bidangs, r
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-3xl overflow-hidden p-0">
-                {/* Header dengan Background Tipis */}
                 <div className="bg-muted/40 px-6 py-4 border-b">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
@@ -107,7 +104,6 @@ export default function UserFormModal({ isOpen, onClose, editingData, bidangs, r
                 <form onSubmit={submit} className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                        {/* KOLOM KIRI: DATA AKUN (LOGIN) */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 text-primary font-semibold border-b pb-2 mb-3">
                                 <KeyRound className="h-4 w-4" />
@@ -161,7 +157,6 @@ export default function UserFormModal({ isOpen, onClose, editingData, bidangs, r
                                     <InputError message={errors.role} />
                                 </div>
 
-                                {/* Bagian Password */}
                                 <div className="pt-2">
                                     {editingData && !changePassword ? (
                                         <Button
@@ -218,7 +213,6 @@ export default function UserFormModal({ isOpen, onClose, editingData, bidangs, r
                             </div>
                         </div>
 
-                        {/* KOLOM KANAN: DATA PROFIL (PEGAWAI) */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 text-primary font-semibold border-b pb-2 mb-3">
                                 <Briefcase className="h-4 w-4" />
@@ -248,7 +242,6 @@ export default function UserFormModal({ isOpen, onClose, editingData, bidangs, r
                                     />
                                 </div>
 
-                                {/* DROPDOWN UNIT YANG USER FRIENDLY */}
                                 <div className="space-y-1">
                                     <Label htmlFor="id_bidang">Unit Kerja / Penempatan</Label>
                                     <select

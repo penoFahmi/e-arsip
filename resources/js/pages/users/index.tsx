@@ -1,9 +1,7 @@
-// resources/js/pages/users/index.tsx
-
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
-import { Plus, Search, Users } from 'lucide-react'; // Icon baru
+import { Plus, Search, Users } from 'lucide-react';
 
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -17,7 +15,7 @@ interface Props extends PageProps {
     users: {
         data: UserData[];
         links: any[];
-        from: number; // [PENTING] Ini data dari Laravel Pagination
+        from: number;
         total: number;
     };
     bidangs: BidangOption[];
@@ -58,7 +56,6 @@ export default function UserIndex({ users, bidangs, roleLabels, filters }: Props
 
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6 bg-muted/10">
 
-                {/* Header Section dengan Info Total */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
@@ -88,18 +85,14 @@ export default function UserIndex({ users, bidangs, roleLabels, filters }: Props
                     </div>
                 </div>
 
-                {/* List View */}
                 <UserList
                     data={users.data}
-                    from={users.from} // [PENTING] Kirim prop ini agar nomor urut benar
+                    from={users.from}
                     onEdit={openEditModal}
                     onDelete={deleteUser}
                     filters={filters}
                     roleLabels={roleLabels}
                 />
-
-                {/* Pagination Controls (Opsional jika ingin tombol Next/Prev sederhana) */}
-                {/* Biasanya Inertia Link bisa ditaruh disini jika mau custom pagination */}
 
                 <UserFormModal
                     isOpen={isModalOpen}

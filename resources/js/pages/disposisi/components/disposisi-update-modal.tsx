@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, MapPin, Clock, FileText, CheckCircle, Paperclip, Upload, X} from 'lucide-react';
+import { MapPin, FileText, CheckCircle, Paperclip, Upload, X} from 'lucide-react';
 import {
     Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
@@ -30,7 +30,7 @@ export default function DisposisiUpdateModal({ isOpen, onClose, disposisi }: Pro
         jam_mulai: '',
         tgl_selesai: '',
         jam_selesai: '',
-        file_tindak_lanjut: null as File | null, // [BARU]
+        file_tindak_lanjut: null as File | null,
     });
 
     useEffect(() => {
@@ -84,7 +84,6 @@ export default function DisposisiUpdateModal({ isOpen, onClose, disposisi }: Pro
 
                 <form onSubmit={submit} className="space-y-5 py-4">
 
-                    {/* --- STATUS & CATATAN --- */}
                     <div className="space-y-3">
                         <div className="space-y-1">
                             <Label>Status Pengerjaan</Label>
@@ -111,7 +110,6 @@ export default function DisposisiUpdateModal({ isOpen, onClose, disposisi }: Pro
                         </div>
                     </div>
 
-                    {/* --- FITUR AGENDA CERDAS --- */}
                     <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4 space-y-4">
                         <div className="flex items-center space-x-2">
                             <Checkbox
@@ -174,7 +172,6 @@ export default function DisposisiUpdateModal({ isOpen, onClose, disposisi }: Pro
                         )}
                     </div>
 
-                    {/* --- UPLOAD FILE TINDAK LANJUT (BARU) --- */}
                     <div className="space-y-2">
                         <Label className="text-xs font-semibold flex items-center gap-2">
                             <Paperclip className="h-3.5 w-3.5" /> Upload Dokumen Hasil (Opsional)
@@ -206,7 +203,6 @@ export default function DisposisiUpdateModal({ isOpen, onClose, disposisi }: Pro
                                 accept=".pdf,.xls,.xlsx,.doc,.docx,.jpg,.jpeg,.png"
                             />
                         </div>
-                        {/* Jika sudah ada file sebelumnya di server (opsional ditampilkan disini) */}
                         {disposisi?.file_tindak_lanjut && !data.file_tindak_lanjut && (
                             <div className="text-[10px] text-blue-600 flex items-center gap-1 pl-1">
                                 <CheckCircle className="h-3 w-3" /> Sudah ada file sebelumnya. Upload baru untuk mengganti.

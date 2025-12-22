@@ -75,7 +75,6 @@ export default function SuratFormModal({ isOpen, onClose, editingData }: Props) 
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto p-0">
 
-                {/* Header Kustom */}
                 <div className="px-6 py-4 border-b bg-muted/40">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
@@ -90,7 +89,6 @@ export default function SuratFormModal({ isOpen, onClose, editingData }: Props) 
 
                 <form onSubmit={submit} className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                    {/* --- KOLOM KIRI: Identitas Naskah --- */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 text-sm font-semibold text-primary pb-2 border-b">
                             <FileText className="h-4 w-4" /> Data Naskah Dinas
@@ -151,7 +149,6 @@ export default function SuratFormModal({ isOpen, onClose, editingData }: Props) 
                         </div>
                     </div>
 
-                    {/* --- KOLOM KANAN: Penerimaan & File --- */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 text-sm font-semibold text-primary pb-2 border-b">
                             <Calendar className="h-4 w-4" /> Penerimaan & File
@@ -196,7 +193,6 @@ export default function SuratFormModal({ isOpen, onClose, editingData }: Props) 
                             </div>
                         </div>
 
-                        {/* INPUT FILE YANG RAPI */}
                         <div className="space-y-2 pt-2">
                             <Label className="text-xs">Scan File Surat (PDF/Gambar)</Label>
 
