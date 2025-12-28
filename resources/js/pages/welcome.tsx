@@ -60,7 +60,7 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
 
                         <h1 className="text-5xl sm:text-7xl font-black tracking-tight text-gray-900 dark:text-white leading-[1.1]">
                             Digitalisasi Arsip <br/>
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-red-600">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-red from-red-600 via-orange-500 to-red-600">
                                 Bidang Anggaran
                             </span>
                         </h1>
@@ -92,8 +92,8 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                                     <GraduationCap className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pengembang</p>
-                                    <p className="font-semibold text-gray-900 dark:text-white">Peno (Fahmi)</p>
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Mahasiswa</p>
+                                    <p className="font-semibold text-gray-900 dark:text-white">Peno</p>
                                     <p className="text-xs text-gray-500">NIM: 221220095</p>
                                 </div>
                             </div>
@@ -103,9 +103,9 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                                     <Building2 className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Dosen Pembimbing</p>
-                                    <p className="font-semibold text-gray-900 dark:text-white">Pak Barry</p>
-                                    <p className="text-xs text-gray-500">Teknik Informatika</p>
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Dosen Pembimbing Lapangan</p>
+                                    <p className="font-semibold text-gray-900 dark:text-white">Barry Ceasar Octariadi, S.Kom., M.Cs</p>
+                                    <p className="text-xs text-gray-500">NIDN: 1125108601</p>
                                 </div>
                             </div>
 
@@ -115,8 +115,8 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Mentor Lapangan</p>
-                                    <p className="font-semibold text-gray-900 dark:text-white">Bapak Andiansyah</p>
-                                    <p className="text-xs text-gray-500">BKAD - Bidang Anggaran</p>
+                                    <p className="font-semibold text-gray-900 dark:text-white">Andiyansah, S.E, M.AK</p>
+                                    <p className="text-xs text-gray-500">BKAD - KASUBID Penyusun dan Pengendali Anggaran</p>
                                 </div>
                             </div>
                         </div>

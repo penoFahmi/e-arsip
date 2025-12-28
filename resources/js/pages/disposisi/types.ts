@@ -1,8 +1,20 @@
 export interface SuratData {
+    id: number;
     no_surat: string;
     perihal: string;
     pengirim: string;
     file_scan?: { path_file: string }[];
+    agenda?: AgendaData[];
+}
+
+export interface AgendaData {
+    id: number;
+    judul_agenda: string;
+    lokasi: string;
+    tgl_mulai: string;
+    jam_mulai: string;
+    tgl_selesai: string;
+    jam_selesai: string;
 }
 
 export interface UserData {
@@ -19,7 +31,7 @@ export interface DisposisiData {
     sifat_disposisi: 'biasa' | 'segera' | 'sangat_segera' | 'rahasia';
     parent?: {
         dari_user: UserData
-    }; // Info atasan dari atasan (jika berjenjang)
+    };
 
     status_disposisi: 'terkirim' | 'dibaca' | 'tindak_lanjut' | 'selesai';
     catatan?: string;

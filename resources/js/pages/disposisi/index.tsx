@@ -5,11 +5,10 @@ import { Search, FileSpreadsheet } from 'lucide-react';
 
 import AppLayout from '@/layouts/app-layout';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button'; 
+import { Button } from '@/components/ui/button';
 
 import { DisposisiData } from './types';
 import DisposisiList from './components/disposisi-list';
-import DisposisiUpdateModal from './components/disposisi-update-modal';
 
 interface Props extends PageProps {
     disposisis: { data: DisposisiData[]; links: any[] };
@@ -18,18 +17,11 @@ interface Props extends PageProps {
 
 export default function DisposisiIndex({ disposisis, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
-    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-    const [selectedDisposisi, setSelectedDisposisi] = useState<DisposisiData | null>(null);
 
     const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             router.get('/disposisi', { search }, { preserveState: true });
         }
-    };
-
-    const openUpdateModal = (item: DisposisiData) => {
-        setSelectedDisposisi(item);
-        setIsUpdateModalOpen(true);
     };
 
     const handleExport = () => {
@@ -73,14 +65,6 @@ export default function DisposisiIndex({ disposisis, filters }: Props) {
 
                 <DisposisiList
                     data={disposisis.data}
-                    onUpdateClick={openUpdateModal}
-                />
-
-                {/* Modal */}
-                <DisposisiUpdateModal
-                    isOpen={isUpdateModalOpen}
-                    onClose={() => setIsUpdateModalOpen(false)}
-                    disposisi={selectedDisposisi}
                 />
 
             </div>

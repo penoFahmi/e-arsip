@@ -3,13 +3,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileCheck } from 'lucide-react';
 import { DisposisiData } from '../types';
+import { Link } from '@inertiajs/react';
 
 interface Props {
     data: DisposisiData[];
-    onUpdateClick: (item: DisposisiData) => void;
 }
 
-export default function DisposisiList({ data, onUpdateClick }: Props) {
+export default function DisposisiList({ data }: Props) {
 
     const getStatusBadge = (status: string) => {
         switch (status) {
@@ -107,14 +107,15 @@ export default function DisposisiList({ data, onUpdateClick }: Props) {
                                 </Button>
                             )}
 
-                            <Button
-                                size="sm"
-                                variant={item.status_disposisi === 'selesai' ? 'secondary' : 'default'}
-                                onClick={() => onUpdateClick(item)}
-                                className="h-8 text-xs shadow-sm"
-                            >
-                                {item.status_disposisi === 'selesai' ? 'Update' : 'Tindak Lanjut'}
-                            </Button>
+                            <Link href={`/disposisi/${item.id}`} className="w-full sm:w-auto">
+                                <Button
+                                    size="sm"
+                                    variant={item.status_disposisi === 'selesai' ? 'secondary' : 'default'}
+                                    className="h-8 text-xs shadow-sm w-full"
+                                >
+                                    {item.status_disposisi === 'selesai' ? 'Lihat Detail / Edit' : 'Tindak Lanjut'}
+                                </Button>
+                            </Link>
                         </div>
                     </div>
                 </div>

@@ -16,10 +16,10 @@ use Illuminate\Support\Facades\Storage;
 
 class DisposisiController extends Controller
 {
-    
+
     public function index(Request $request)
     {
-        $query = Disposisi::with(['surat', 'dariUser', 'parent.dariUser', 'surat.fileScan'])
+        $query = Disposisi::with(['surat', 'dariUser', 'parent.dariUser', 'surat.fileScan', 'surat.agenda'])
             ->where('ke_user_id', auth()->id())
             ->latest('tgl_disposisi');
 
@@ -32,6 +32,24 @@ class DisposisiController extends Controller
         }
         $disposisi = $query->paginate(10)->withQueryString();
         return Inertia::render('disposisi/index', ['disposisis' => $disposisi, 'filters' => $request->only(['search'])]);
+    }
+
+    public function show($id)
+    {
+        $disposisi = Disposisi::with([
+            'surat.fileScan',
+            'surat.agenda',
+            'dariUser',
+            'parent.dariUser',
+        ])->findOrFail($id);
+
+        if ($disposisi->ke_user_id !== auth()->id() && $disposisi->dari_user_id !== auth()->id()) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        return Inertia::render('disposisi/show', [
+            'disposisi' => $disposisi
+        ]);
     }
 
     public function store(Request $request)
@@ -52,17 +70,14 @@ class DisposisiController extends Controller
 
         DB::transaction(function () use ($validated, $request) {
 
-            // 1. CEK PENERIMA (Bidang apa?)
             $penerima = User::find($request->ke_user_id);
             $idBidangPenerima = $penerima->id_bidang;
 
-            // 2. GENERATE AGENDA LOKAL (Jika penerima adalah Bidang)
             $noAgendaLokal = null;
             if ($idBidangPenerima) {
                 $noAgendaLokal = $this->generateAgendaLokal($idBidangPenerima, now());
             }
 
-            // Tambahkan ke data yang akan disimpan
             $validated['no_agenda_penerima'] = $noAgendaLokal;
 
             Disposisi::create($validated);
@@ -156,17 +171,21 @@ class DisposisiController extends Controller
             $shouldCreateAgenda = filter_var($request->create_agenda, FILTER_VALIDATE_BOOLEAN) || $request->create_agenda === 'true';
 
             if ($shouldCreateAgenda) {
-                Agenda::create([
+                Agenda::updateOrCreate(
+                    [
                     'id_surat' => $disposisi->id_surat,
-                    'judul_agenda' => $request->judul_agenda ?? 'Tindak Lanjut',
+                    'penanggung_jawab' => auth()->id(),
+                    ],
+                    [
+                    'judul_agenda' => $request->judul_agenda ?? 'Tindak Lanjut Disposisi',
                     'lokasi' => $request->lokasi ?? 'Kantor',
                     'tgl_mulai' => $request->tgl_mulai,
                     'tgl_selesai' => $request->tgl_selesai,
                     'jam_mulai' => $request->jam_mulai,
                     'jam_selesai' => $request->jam_selesai,
-                    'penanggung_jawab' => auth()->id(),
                     'keterangan' => "Agenda otomatis dari tindak lanjut. Catatan: " . $request->catatan,
-                ]);
+                ]
+            );
                 $pesan .= " & Membuat Agenda Kegiatan.";
             }
 
