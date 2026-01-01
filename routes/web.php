@@ -31,6 +31,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/cetak', [LaporanController::class, 'cetak'])->name('laporan.cetak');
+    Route::get('laporan/agenda-surat-masuk', [LaporanController::class, 'index'])->name('laporan.agenda-surat-masuk');
 
     Route::get('/api/users/bawahan', [UserController::class, 'getBawahan']);
 
@@ -49,6 +50,7 @@ Route::middleware(['auth'])->group(function () {
                 ->name('surat-keluar.upload-bukti');
             Route::get('/disposisi/export', [DisposisiController::class, 'export'])->name('disposisi.export');
             Route::resource('disposisi', DisposisiController::class);
+            Route::get('/disposisi/{disposisi}/show', [DisposisiController::class, 'show'])->name('disposisi.show');
             Route::get('/settings/app', [AppSettingController::class, 'index'])->name('settings.app');
             Route::post('/settings/app', [AppSettingController::class, 'update'])->name('settings.app.update');
             Route::get('/settings/disposisi', [AppSettingController::class, 'editDisposisi'])->name('settings.disposisi');

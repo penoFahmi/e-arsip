@@ -3,62 +3,47 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class AgendaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $query = \App\Models\Agenda::with(['surat', 'penanggungJawab'])
+            ->orderBy('tgl_mulai', 'desc')
+            ->orderBy('jam_mulai', 'asc');
+
+        if ($request->search) {
+            $query->where('judul_agenda', 'like', "%{$request->search}%")
+                ->orWhere('lokasi', 'like', "%{$request->search}%");
+        }
+
+        return Inertia::render('agenda/index', [
+            'agendas' => $query->paginate(10)->withQueryString(),
+            'filters' => $request->only(['search'])
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
-    }
+        $validated = $request->validate([
+            'id_surat' => 'nullable|exists:surat_masuk,id',
+            'judul_agenda' => 'required|string|max:255',
+            'lokasi' => 'nullable|string|max:255',
+            'tgl_mulai' => 'required|date',
+            'tgl_selesai' => 'nullable|date|after_or_equal:tgl_mulai',
+            'jam_mulai' => 'required',
+            'jam_selesai' => 'nullable|after:jam_mulai',
+            'keterangan' => 'nullable|string',
+            'penanggung_jawab' => 'nullable|exists:users,id',
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        if (empty($validated['penanggung_jawab'])) {
+            $validated['penanggung_jawab'] = auth()->id();
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+        \App\Models\Agenda::create($validated);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return redirect()->back()->with('success', 'Jadwal kegiatan berhasil disimpan.');
     }
 }

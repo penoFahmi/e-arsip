@@ -29,10 +29,9 @@ export default function DisposisiShow({ disposisi }: Props) {
 
     // Setup Form Inertia
     const { data, setData, post, processing, errors, reset } = useForm({
+        _method: 'PUT',
         status_disposisi: disposisi.status_disposisi,
         catatan: disposisi.catatan || '',
-
-        // Data Agenda (Pre-fill jika ada)
         create_agenda: !!existingAgenda,
         judul_agenda: existingAgenda?.judul_agenda || `Tindak Lanjut: ${disposisi.surat.perihal}`,
         lokasi: existingAgenda?.lokasi || '',
@@ -50,11 +49,9 @@ export default function DisposisiShow({ disposisi }: Props) {
     const handleSubmit: FormEventHandler = (e) => {
         e.preventDefault();
         post(`/disposisi/${disposisi.id}`, {
-            _method: 'put',
-            onSuccess: () => {
-                // Optional: Tampilkan notifikasi sukses / scroll to top
-            },
             forceFormData: true,
+            onSuccess: () => {
+            },
         });
     };
 

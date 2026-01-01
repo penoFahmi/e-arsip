@@ -60,8 +60,6 @@ class LaporanController extends Controller
             'config' => $settings
         ])->setPaper('a4', 'portrait');
 
-        // [FIX] Ganti tanda '/' jadi '-' agar nama file valid
-        // Contoh: "001/SEK/2025" menjadi "001-SEK-2025"
         $safeAgenda = str_replace('/', '-', $suratMasuk->no_agenda);
         $fileName = 'Disposisi-' . $safeAgenda . '.pdf';
 
