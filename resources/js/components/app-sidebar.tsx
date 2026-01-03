@@ -10,22 +10,27 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import { type NavItem, type SharedData } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
+import { usePage, Link } from '@inertiajs/react';
 import {
-    BookOpen,
-    Folder,
     LayoutGrid,
-    Users,
-    Settings,
-    Send,
-    Monitor,
-    FileText,
     FileInput,
     FileOutput,
+    Send,
+    Calendar,
+    BookOpen,
+    Users,
+    Folder,
+    Settings,
+    Monitor,
+    FileText,
+    BookMarked,
+    CalendarDays,
+    MailCheck,
+    MonitorCheck
 } from 'lucide-react';
 import AppLogo from './app-logo';
+import { title } from 'process';
 
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
@@ -46,30 +51,83 @@ export function AppSidebar() {
             icon: FileInput,
         },
         {
-            title: 'Disposisi',
-            href: '/disposisi',
-            icon: Send,
-        },
-        {
             title: 'Surat Keluar',
             href: '/surat-keluar',
             icon: FileOutput,
         },
+
+    ];
+
+    const disposisiMenu: NavItem[] = [
+        {
+            title: 'Disposisi',
+            href: '#',
+            icon: Send,
+            items: [
+                {
+                    title: 'Disposisi Masuk',
+                    href: '/disposisi',
+                    icon: MailCheck
+                },
+                {
+                    title: 'Riwayat Disposisi',
+                    href: '/disposisi/outgoing',
+                    icon: MonitorCheck
+                }
+            ]
+        },
+    ]
+
+    const agendaLaporanMenu: NavItem[] = [
+        {
+            title: 'Agenda Kegiatan',
+            href: '#',
+            icon: Calendar,
+            items: [
+                {
+                    title: 'Jadwal Kegiatan',
+                    href: '/agenda',
+                    icon: CalendarDays
+                },
+                {
+                    title: 'Kalender',
+                    href: '/agenda/kalender',
+                    icon: Calendar
+                }
+            ]
+        },
+        {
+            title: 'Laporan & Arsip',
+            href: '#',
+            icon: BookMarked,
+            items: [
+                {
+                    title: 'Buku Agenda Masuk',
+                    href: '/laporan/surat-masuk',
+                    icon: BookOpen
+                },
+                {
+                    title: 'Buku Agenda Keluar',
+                    href: '/laporan/surat-keluar',
+                    icon: BookOpen
+                }
+            ]
+        }
     ];
 
     const adminMenu: NavItem[] = [
         {
-            title: 'Manajemen User',
+            title: 'Manajemen Pegawai',
             href: '/users',
             icon: Users,
         },
         {
-            title: 'Manajemen Bidang',
-            href: '/bidang', 
+            title: 'Unit Kerja (Bidang)',
+            href: '/bidang',
             icon: Folder,
         },
         {
-            title: 'Pengaturan Aplikasi',
+            title: 'Pengaturan',
             href: '#',
             icon: Settings,
             items: [
@@ -79,7 +137,7 @@ export function AppSidebar() {
                     icon: Monitor
                 },
                 {
-                    title: 'Label Disposisi',
+                    title: 'Format Disposisi',
                     href: '/settings/disposisi',
                     icon: FileText
                 }
@@ -87,11 +145,9 @@ export function AppSidebar() {
         },
     ];
 
-    let navItems: NavItem[] = [...dashboardMenu];
+    let navItems: NavItem[] = [...dashboardMenu, ...suratMenu, ...disposisiMenu, ...agendaLaporanMenu];
 
-    navItems = [...navItems, ...suratMenu];
-
-    if (user.role === 'super_admin') {
+    if (user.role === 'super_admin' || user.role === 'level_1') {
         navItems = [...navItems, ...adminMenu];
     }
 

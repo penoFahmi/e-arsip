@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import InputError from '@/components/input-error';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Send, AlertCircle, Sparkles, UserCheck } from 'lucide-react';
+import { Send, AlertCircle, Sparkles, UserCheck, Loader2 } from 'lucide-react';
 import { SuratData } from '../types';
+import { toast } from 'sonner';
 
 interface Bawahan {
     id: number;
@@ -26,6 +27,7 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
     const [bawahanList, setBawahanList] = useState<Bawahan[]>([]);
     const [isLoadingBawahan, setIsLoadingBawahan] = useState(false);
 
+    // Template instruksi cepat
     const quickInstructions = [
         "Mohon ditindaklanjuti",
         "Untuk diketahui",
@@ -38,28 +40,33 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
 
     const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         id_surat: '',
+        parent_id: '', // Menampung ID disposisi sebelumnya (jika berantai)
         ke_user_id: '',
         sifat_disposisi: 'biasa',
         instruksi: '',
         batas_waktu: '',
-        catatan: '',
     });
 
+    // EFFECT: Saat Modal Dibuka
     useEffect(() => {
         if (isOpen && surat) {
             clearErrors();
             reset();
+
+            // Set ID Surat
             setData('id_surat', String(surat.id));
 
+            // [LOGIC PINTAR] Ambil Data Bawahan Sesuai Jabatan User Login
             setIsLoadingBawahan(true);
             fetch('/api/users/bawahan')
                 .then((res) => res.json())
-                .then((data) => {
-                    setBawahanList(data);
+                .then((apiData) => {
+                    setBawahanList(apiData);
                     setIsLoadingBawahan(false);
                 })
                 .catch((err) => {
                     console.error("Gagal ambil bawahan", err);
+                    toast.error("Gagal memuat daftar bawahan.");
                     setIsLoadingBawahan(false);
                 });
         }
@@ -73,7 +80,15 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post('/disposisi', { onSuccess: onClose });
+        post('/disposisi', {
+            onSuccess: () => {
+                toast.success("Disposisi berhasil dikirim!");
+                onClose();
+            },
+            onError: () => {
+                toast.error("Gagal mengirim disposisi. Periksa inputan.");
+            }
+        });
     };
 
     return (
@@ -93,12 +108,15 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                     </div>
                 </DialogHeader>
 
+                {/* Info Surat Singkat */}
                 <div className="bg-muted/30 p-3 rounded-md border border-dashed text-xs text-muted-foreground mb-2">
-                    <span className="font-semibold text-foreground">Ref Surat:</span> {surat?.perihal}
+                    <p><span className="font-semibold text-foreground">Perihal:</span> {surat?.perihal}</p>
+                    <p className="mt-1"><span className="font-semibold text-foreground">Pengirim:</span> {surat?.pengirim}</p>
                 </div>
 
                 <form onSubmit={submit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
+                        {/* DROPDOWN TUJUAN (BAWAHAN) */}
                         <div className="space-y-2 col-span-2 md:col-span-1">
                             <Label>Tujuan Disposisi <span className="text-red-500">*</span></Label>
                             <div className="relative">
@@ -111,8 +129,9 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                                     disabled={isLoadingBawahan}
                                 >
                                     <option value="">
-                                        {isLoadingBawahan ? 'Memuat...' : '-- Pilih Bawahan --'}
+                                        {isLoadingBawahan ? 'Memuat hierarki...' : '-- Pilih Bawahan --'}
                                     </option>
+
                                     {!isLoadingBawahan && bawahanList.map(u => (
                                         <option key={u.id} value={u.id}>
                                             {u.name} — {u.jabatan}
@@ -122,14 +141,16 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                             </div>
                             <InputError message={errors.ke_user_id} />
 
+                            {/* Alert jika tidak punya bawahan */}
                             {!isLoadingBawahan && bawahanList.length === 0 && (
                                 <p className="text-[10px] text-orange-600 mt-1 flex items-center gap-1">
                                     <AlertCircle className="h-3 w-3" />
-                                    Tidak ada bawahan langsung.
+                                    Anda tidak memiliki bawahan langsung di sistem.
                                 </p>
                             )}
                         </div>
 
+                        {/* SIFAT DISPOSISI */}
                         <div className="space-y-2 col-span-2 md:col-span-1">
                             <Label>Sifat Instruksi</Label>
                             <select
@@ -146,13 +167,10 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                         </div>
                     </div>
 
+                    {/* TEXTAREA INSTRUKSI */}
                     <div className="space-y-2">
                         <Label className="flex justify-between items-center">
                             Isi Instruksi <span className="text-red-500">*</span>
-                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                <Sparkles className="h-3 w-3 text-yellow-500" />
-                                Klik tag di bawah untuk isi cepat
-                            </span>
                         </Label>
 
                         <textarea
@@ -163,22 +181,26 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                             placeholder="Ketik instruksi manual disini..."
                         />
 
+                        {/* TAG CEPAT */}
                         <div className="flex flex-wrap gap-1.5 mt-2">
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-1 mr-1">
+                                <Sparkles className="h-3 w-3 text-yellow-500" /> Isi Cepat:
+                            </span>
                             {quickInstructions.map((text) => (
                                 <Badge
                                     key={text}
                                     variant="outline"
-                                    className="cursor-pointer hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors font-normal text-xs py-1"
+                                    className="cursor-pointer hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors font-normal text-[10px] py-0.5 px-2"
                                     onClick={() => addInstruction(text)}
                                 >
-                                    + {text}
+                                    {text}
                                 </Badge>
                             ))}
                         </div>
-
                         <InputError message={errors.instruksi} />
                     </div>
 
+                    {/* BATAS WAKTU */}
                     <div className="space-y-2">
                         <Label className="flex items-center gap-2">
                             Batas Waktu Penyelesaian <span className="text-xs text-muted-foreground font-normal">(Opsional)</span>
@@ -191,10 +213,11 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                         />
                     </div>
 
+                    {/* WARNING JIKA SANGAT SEGERA */}
                     {data.sifat_disposisi === 'sangat_segera' && (
                         <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 text-xs rounded-md border border-red-200 animate-pulse">
                             <AlertCircle className="h-4 w-4" />
-                            <strong>Perhatian:</strong> Notifikasi "Sangat Segera" akan dikirim ke HP bawahan!
+                            <strong>Perhatian:</strong> Sistem akan menandai ini sebagai prioritas TINGGI.
                         </div>
                     )}
 
@@ -205,8 +228,11 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                             disabled={processing || (bawahanList.length === 0 && !isLoadingBawahan)}
                             className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
                         >
-                            <Send className="h-4 w-4 mr-2" />
-                            {isLoadingBawahan ? 'Memuat Data...' : 'Kirim Disposisi'}
+                            {isLoadingBawahan ? (
+                                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Memuat...</>
+                            ) : (
+                                <><Send className="h-4 w-4 mr-2" /> Kirim Disposisi</>
+                            )}
                         </Button>
                     </DialogFooter>
                 </form>

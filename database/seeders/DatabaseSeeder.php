@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 
+use function Symfony\Component\Clock\now;
+
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -31,6 +33,7 @@ class DatabaseSeeder extends Seeder
             ['key' => 'app_description', 'value' => 'Sistem Informasi Manajemen Surat & Disposisi'],
             ['key' => 'label_level_1', 'value' => 'Kepala Badan'],
             ['key' => 'label_level_2', 'value' => 'Sekretaris / Kepala Bidang'],
+            ['key' => 'admin_bidang', 'value' => 'Admin Bidang'],
             ['key' => 'label_level_3', 'value' => 'Kasubbag / Kasubbid'],
         ];
 
@@ -108,6 +111,12 @@ class DatabaseSeeder extends Seeder
             'parent_id' => $bidAnggaran->id,
         ]);
 
+        $subRenAng = Bidang::create([
+            'nama_bidang' => 'Staf Sub Bidang Perencanaan Anggaran',
+            'kode' => 'Staf Anggaran',
+            'parent_id' => $subRenAng->id,
+        ]);
+
         // ==========================================
         // 3. SETUP USERS
         // ==========================================
@@ -119,9 +128,20 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@setup.app',
             'password' => Hash::make('password'),
             'role' => 'super_admin',
-            'id_bidang' => null, // Tidak punya ruangan fisik
+            'id_bidang' => null,
             'jabatan' => 'Admin Aplikasi',
             'status_aktif' => true,
+        ]);
+        User::create([
+            'name' => 'Peno DEV',
+            'username' => 'developer',
+            'email' => 'penofahmi@gmail.com',
+            'password' => Hash::make('password'),
+            'role' => 'super_admin',
+            'id_bidang' => null,
+            'jabatan' => 'Developer',
+            'status_aktif' => true,
+            'email_verified_at' => now(),
         ]);
 
         // B. KEPALA BADAN (Masuk ke Unit Kaban)
@@ -131,9 +151,10 @@ class DatabaseSeeder extends Seeder
             'email' => 'kaban@bkad.pontianak.go.id',
             'password' => Hash::make('password'),
             'role' => 'level_1',
-            'id_bidang' => $unitKaban->id, // PENTING: Masuk ke kotak paling atas
+            'id_bidang' => $unitKaban->id,
             'jabatan' => 'Plt. Kepala Badan',
             'status_aktif' => true,
+            'email_verified_at' => now(),
         ]);
 
         // C. SEKRETARIS & KABID (Level 2)
@@ -146,6 +167,7 @@ class DatabaseSeeder extends Seeder
             'id_bidang' => $sekretariat->id,
             'jabatan' => 'Sekretaris Badan',
             'status_aktif' => true,
+            'email_verified_at' => now(),
         ]);
 
         User::create([
@@ -157,6 +179,7 @@ class DatabaseSeeder extends Seeder
             'id_bidang' => $bidAnggaran->id,
             'jabatan' => 'Kepala Bidang Anggaran',
             'status_aktif' => true,
+            'email_verified_at' => now(),
         ]);
 
         // D. KASUBBAG / KASUBBID (Level 3)
@@ -180,29 +203,32 @@ class DatabaseSeeder extends Seeder
             'id_bidang' => $subRenAng->id,
             'jabatan' => 'Kasubbid Perencanaan Anggaran',
             'status_aktif' => true,
+            'email_verified_at' => now(),
         ]);
 
         // E. STAF PELAKSANA
         User::create([
-            'name' => 'Peno (Staf Teknis)',
+            'name' => 'Peno (Admin Bidang)',
             'username' => 'peno',
             'email' => 'peno@bkad.pontianak.go.id',
             'password' => Hash::make('password'),
-            'role' => 'staf',
-            'id_bidang' => $subRenAng->id,
-            'jabatan' => 'Pengelola Data Anggaran',
+            'role' => 'admin_bidang',
+            'id_bidang' => $bidAnggaran->id,
+            'jabatan' => 'Pengelola EArsip Anggaran',
             'status_aktif' => true,
+            'email_verified_at' => now(),
         ]);
 
         User::create([
-            'name' => 'Nazril',
-            'username' => 'nazril',
-            'email' => 'nazril@bkad.pontianak.go.id',
+            'name' => 'Peno (Staf Keuangan)',
+            'username' => 'peno_keuangan',
+            'email' => 'peno_keuangan@bkad.pontianak.go.id',
             'password' => Hash::make('password'),
             'role' => 'staf',
             'id_bidang' => $bidAnggaran->id,
             'jabatan' => 'Staf Administrasi',
             'status_aktif' => true,
+            'email_verified_at' => now(),
         ]);
     }
 }

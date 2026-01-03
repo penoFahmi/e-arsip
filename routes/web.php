@@ -48,6 +48,7 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('surat-keluar', SuratKeluarController::class);
             Route::post('/surat-keluar/{suratKeluar}/upload-bukti', [SuratKeluarController::class, 'uploadBukti'])
                 ->name('surat-keluar.upload-bukti');
+            Route::get('/disposisi/outgoing', [DisposisiController::class, 'outgoing'])->name('disposisi.outgoing');
             Route::get('/disposisi/export', [DisposisiController::class, 'export'])->name('disposisi.export');
             Route::resource('disposisi', DisposisiController::class);
             Route::get('/disposisi/{disposisi}/show', [DisposisiController::class, 'show'])->name('disposisi.show');

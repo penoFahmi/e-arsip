@@ -19,27 +19,67 @@ class SuratMasukController extends Controller
     {
         $user = auth()->user();
 
-        // Eager Load relasi yang diperlukan
-        $query = SuratMasuk::with(['fileScan', 'bidangPenerima'])
-            ->latest('tgl_terima')
-            ->latest('created_at'); // Urutan cadangan biar stabil
+        // 1. QUERY DASAR
+        $query = SuratMasuk::with(['fileScan', 'bidangPenerima', 'userInput'])
+            ->latest('tgl_terima');
 
-        // LOGIKA HAK AKSES MELIHAT SURAT
+        // 2. TENTUKAN HAK AKSES
+
+        // Cek Orang Sekretariat
         $isSekretariat = $user->bidang && $user->bidang->kode === 'SEK';
 
-        if ($user->role === 'super_admin' || $user->role === 'level_1' || $isSekretariat) {
-            // 1. Admin, Kaban, & Sekretariat BISA LIHAT SEMUA SURAT
-        } else {
-            // 2. Bidang Lain / Staff HANYA LIHAT surat milik bidangnya atau disposisi ke dia
+        // Syarat Akses Global (Melihat Semua Surat Se-Kantor):
+        // 1. Super Admin
+        // 2. Level 1 (Kaban)
+        // 3. Pejabat Sekretariat (Sekban & Admin Pusat) -> Staf Biasa Sekretariat TIDAK MASUK SINI
+        $hasGlobalAccess =
+            $user->role === 'super_admin' ||
+            $user->role === 'level_1' ||
+            ($isSekretariat && ($user->role === 'level_2' || $user->role === 'admin_bidang'));
+
+        // --- SKENARIO 1: AKSES GLOBAL (KABAN/SEKBAN) ---
+        if ($hasGlobalAccess) {
+            // Tidak ada filter, tampilkan semua.
+        }
+
+        // --- SKENARIO 2: AKSES TERBATAS (BIDANG & STAF) ---
+        else {
             $query->where(function ($q) use ($user) {
-                $q->where('id_bidang_penerima', $user->id_bidang)
-                    ->orWhereHas('disposisi', function ($d) use ($user) {
-                        $d->where('ke_user_id', $user->id);
-                    })
-                    ->orWhere('id_user_input', $user->id);
+
+                // A. HAK DASAR (SEMUA USER)
+                // Bisa lihat surat tugas sendiri (Disposisi) atau buatan sendiri
+                $q->whereHas('disposisi', function ($d) use ($user) {
+                    $d->where('ke_user_id', $user->id);
+                })
+                ->orWhere('id_user_input', $user->id);
+
+                // B. HAK MONITORING (HANYA KABID & ADMIN BIDANG)
+                if ($user->role === 'level_2' || $user->role === 'admin_bidang') {
+
+                    // Logic: Cari siapa saja "Anak Buah" di bidang ini
+                    // 1. Ambil ID Bidang Saya
+                    $bidangIds = [$user->id_bidang];
+
+                    // 2. Ambil ID Sub-Bidang (Anak-anaknya)
+                    // Contoh: Kabid Anggaran harus bisa lihat surat dari Kasubbid Perencanaan
+                    $anakBidang = Bidang::where('parent_id', $user->id_bidang)->pluck('id')->toArray();
+                    $bidangIds = array_merge($bidangIds, $anakBidang);
+
+                    // 3. Cari User ID siapa saja yang ada di lingkup bidang tersebut
+                    $teamUserIds = User::whereIn('id_bidang', $bidangIds)->pluck('id')->toArray();
+
+                    // --- TERAPKAN FILTER ---
+
+                    // 1. Lihat surat yang DI-INPUT oleh TIM SAYA
+                    $q->orWhereIn('id_user_input', $teamUserIds);
+
+                    // 2. Lihat surat yang TUJUAN UTAMANYA ke Bidang Saya
+                    $q->orWhere('id_bidang_penerima', $user->id_bidang);
+                }
             });
         }
 
+        // 3. FILTER PENCARIAN
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('perihal', 'like', "%{$request->search}%")
@@ -49,8 +89,14 @@ class SuratMasukController extends Controller
             });
         }
 
+        // 4. DATA PENDUKUNG
+        $users = User::where('status_aktif', 1)->where('id', '!=', $user->id)->get(['id', 'name', 'jabatan', 'role']);
+        $bidangs = Bidang::all(['id', 'nama_bidang']);
+
         return Inertia::render('surat-masuk/index', [
             'surats' => $query->paginate(10)->withQueryString(),
+            'users' => $users,
+            'bidangs' => $bidangs,
             'filters' => $request->only(['search']),
         ]);
     }
@@ -63,31 +109,30 @@ class SuratMasukController extends Controller
             'tgl_surat' => 'required|date',
             'tgl_terima' => 'required|date',
             'pengirim' => 'required|string|max:255',
-            'perihal' => 'required|string|max:500', // Perihal panjang ok
+            'perihal' => 'required|string|max:500',
             'ringkasan' => 'nullable|string',
             'sifat_surat' => 'required|in:biasa,penting,rahasia',
             'media' => 'required|in:fisik,digital',
             'file_scan' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'id_bidang_penerima' => 'nullable|exists:bidang,id',
         ]);
 
         $user = auth()->user();
         $validated['id_user_input'] = $user->id;
         $validated['status_surat'] = 'baru';
 
-        // [LOGIKA BARU] Penentuan Unit Penerima
-        // Jika User punya bidang, masuk ke bidangnya.
-        // Jika User NULL bidang (Admin/Kaban), default masuk ke SEKRETARIAT.
-        if ($user->id_bidang) {
-            $validated['id_bidang_penerima'] = $user->id_bidang;
-        } else {
-            $sekretariat = Bidang::where('kode', 'SEK')->orWhere('nama_bidang', 'like', '%Sekretariat%')->first();
-            $validated['id_bidang_penerima'] = $sekretariat ? $sekretariat->id : null;
+        if (empty($validated['id_bidang_penerima'])) {
+            if ($user->id_bidang) {
+                $validated['id_bidang_penerima'] = $user->id_bidang;
+            } else {
+                $sekretariat = Bidang::where('kode', 'SEK')->first();
+                $validated['id_bidang_penerima'] = $sekretariat ? $sekretariat->id : null;
+            }
         }
 
         DB::transaction(function () use ($validated, $request) {
-            // Generate Agenda
             $validated['no_agenda'] = $this->generateSmartAgenda(
-                $validated['id_bidang_penerima'],
+                $validated['id_bidang_penerima'] ?? null,
                 $validated['tgl_terima']
             );
 
@@ -105,7 +150,6 @@ class SuratMasukController extends Controller
                     'ukuran_file' => $file->getSize(),
                 ]);
             }
-
             TrackingService::record($surat->id, 'input', "Surat dicatat dengan No Agenda: {$surat->no_agenda}");
         });
 
@@ -115,7 +159,6 @@ class SuratMasukController extends Controller
     private function generateSmartAgenda($idBidang, $tglTerima)
     {
         $tahun = Carbon::parse($tglTerima)->year;
-
         $kodeBidang = 'UM';
 
         if ($idBidang) {
@@ -126,17 +169,12 @@ class SuratMasukController extends Controller
         }
 
         $pattern = "%/{$kodeBidang}/{$tahun}";
-
-        $lastSurat = SuratMasuk::where('no_agenda', 'like', $pattern)
-            ->orderBy('id', 'desc')
-            ->first();
+        $lastSurat = SuratMasuk::where('no_agenda', 'like', $pattern)->orderBy('id', 'desc')->first();
 
         $nextNo = 1;
         if ($lastSurat) {
             $parts = explode('/', $lastSurat->no_agenda);
-            if (isset($parts[0]) && is_numeric($parts[0])) {
-                $nextNo = intval($parts[0]) + 1;
-            }
+            if (isset($parts[0]) && is_numeric($parts[0])) $nextNo = intval($parts[0]) + 1;
         }
 
         $nomorUrut = str_pad($nextNo, 3, '0', STR_PAD_LEFT);
@@ -145,6 +183,11 @@ class SuratMasukController extends Controller
 
     public function update(Request $request, SuratMasuk $suratMasuk)
     {
+        // 1. CEK HAK AKSES SEBELUM UPDATE (Panggil fungsi private di bawah)
+        if (!$this->canManageSurat($suratMasuk)) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki hak akses untuk mengedit surat ini.');
+        }
+
         $validated = $request->validate([
             'kode_klasifikasi' => 'nullable|string|max:20',
             'id_bidang_penerima' => 'nullable|exists:bidang,id',
@@ -152,7 +195,7 @@ class SuratMasukController extends Controller
             'tgl_surat' => 'required|date',
             'tgl_terima' => 'required|date',
             'pengirim' => 'required|string|max:255',
-            'perihal' => 'required|string|max:255',
+            'perihal' => 'required|string|max:500',
             'ringkasan' => 'nullable|string',
             'sifat_surat' => 'required|in:biasa,penting,rahasia',
             'media' => 'required|in:fisik,digital',
@@ -160,16 +203,25 @@ class SuratMasukController extends Controller
         ]);
 
         DB::transaction(function () use ($validated, $request, $suratMasuk) {
+            // Exclude 'file_scan' dan 'no_agenda' (Agenda tidak boleh berubah)
             $suratData = collect($validated)->except(['file_scan', 'no_agenda'])->toArray();
+
             $suratMasuk->update($suratData);
 
+            // LOGIKA GANTI FILE (REPLACE)
             if ($request->hasFile('file_scan')) {
+                // 1. Hapus file lama fisik & database
                 foreach ($suratMasuk->fileScan as $oldFile) {
-                    if (Storage::disk('public')->exists($oldFile->path_file)) Storage::disk('public')->delete($oldFile->path_file);
+                    if (Storage::disk('public')->exists($oldFile->path_file)) {
+                        Storage::disk('public')->delete($oldFile->path_file);
+                    }
                     $oldFile->delete();
                 }
+
+                // 2. Upload file baru
                 $file = $request->file('file_scan');
                 $path = $file->store('uploads/surat-masuk', 'public');
+
                 FileScan::create([
                     'id_surat' => $suratMasuk->id,
                     'nama_file' => $file->getClientOriginalName(),
@@ -178,27 +230,90 @@ class SuratMasukController extends Controller
                     'ukuran_file' => $file->getSize(),
                 ]);
             }
+
             TrackingService::record($suratMasuk->id, 'edit', 'Data surat diperbarui');
         });
 
         return redirect()->back()->with('success', 'Data surat berhasil diperbarui.');
     }
 
-    // Hapus metode
     public function destroy(SuratMasuk $suratMasuk)
     {
-        foreach ($suratMasuk->fileScan as $file) {
-            if (Storage::disk('public')->exists($file->path_file)) {
-                Storage::disk('public')->delete($file->path_file);
-            }
+        // 1. CEK HAK AKSES
+        if (!$this->canManageSurat($suratMasuk)) {
+            return redirect()->back()->with('error', 'Akses ditolak. Anda bukan pemilik surat ini.');
         }
-        $suratMasuk->delete();
-        return redirect()->back()->with('success', 'Surat dihapus.');
+
+        // 2. CEK INTEGRITAS DATA (PENTING!)
+        // Jangan hapus surat jika sudah ada disposisi
+        $jumlahDisposisi = $suratMasuk->disposisi()->count();
+        if ($jumlahDisposisi > 0) {
+            return redirect()->back()->with('error', 'Gagal! Surat ini sudah didisposisikan. Hapus disposisi terlebih dahulu.');
+        }
+
+        DB::transaction(function () use ($suratMasuk) {
+            // 3. HAPUS FILE FISIK
+            foreach ($suratMasuk->fileScan as $file) {
+                if (Storage::disk('public')->exists($file->path_file)) {
+                    Storage::disk('public')->delete($file->path_file);
+                }
+            }
+            // Hapus record file
+            $suratMasuk->fileScan()->delete();
+
+            // 4. HAPUS LOG TRACKING
+            $suratMasuk->logTrackings()->delete();
+
+            // 5. HAPUS SURAT UTAMA
+            $suratMasuk->delete();
+        });
+
+        return redirect()->back()->with('success', 'Surat berhasil dihapus permanen.');
     }
 
     public function show(SuratMasuk $suratMasuk)
     {
         $suratMasuk->load(['fileScan', 'logTrackings.user', 'disposisi.dariUser', 'disposisi.keUser', 'disposisi.children', 'bidangPenerima']);
         return Inertia::render('surat-masuk/show', ['surat' => $suratMasuk]);
+    }
+
+    private function canManageSurat($surat)
+    {
+        $user = auth()->user();
+
+        // 1. SUPER ADMIN (IT Support)
+        // Tetap kita beri akses untuk perbaikan data darurat/error sistem.
+        if ($user->role === 'super_admin') {
+            return true;
+        }
+
+        // 2. PEJABAT (Kaban & Kabid) -> BLOKIR AKSES
+        // Pejabat tidak boleh mengedit/menghapus arsip. Tugas mereka hanya Disposisi.
+        if ($user->role === 'level_1' || $user->role === 'level_2') {
+            return false;
+        }
+
+        // 3. PEMBUAT SURAT (User Input)
+        // Staf yang mengetik surat itu boleh mengeditnya (misal typo).
+        if ($surat->id_user_input === $user->id) {
+            return true;
+        }
+
+        // 4. ADMIN BIDANG (Operator Ruangan)
+        // Admin Bidang boleh memperbaiki kesalahan input yang dilakukan staf di ruangannya.
+        if ($user->role === 'admin_bidang') {
+            // Load relasi userInput jika belum ada untuk cek bidang penginput
+            if (!$surat->relationLoaded('userInput')) {
+                $surat->load('userInput');
+            }
+
+            // Izinkan JIKA penginput surat ada di SATU BIDANG dengan Admin ini
+            if ($surat->userInput && $surat->userInput->id_bidang === $user->id_bidang) {
+                return true;
+            }
+        }
+
+        // Selain yang di atas (Staf lain, Bidang lain, Kasubbid) -> TOLAK
+        return false;
     }
 }

@@ -25,6 +25,8 @@ export interface SuratData {
     no_surat: string;
     tgl_surat: string;
     tgl_terima: string;
+    id_user_input: number;
+    id_user_penerima: number;
     pengirim: string;
     perihal: string;
     ringkasan?: string;

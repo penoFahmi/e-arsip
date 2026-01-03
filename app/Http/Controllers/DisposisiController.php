@@ -236,4 +236,50 @@ class DisposisiController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    /**
+     * Menampilkan Riwayat Disposisi Keluar (Monitoring)
+     */
+    public function outgoing(Request $request)
+    {
+        // Ambil disposisi dimana SAYA adalah pengirimnya (dari_user_id)
+        $query = Disposisi::with(['surat', 'keUser', 'surat.fileScan']) // Load penerima (keUser)
+            ->where('dari_user_id', auth()->id())
+            ->latest('tgl_disposisi');
+
+        // Fitur Pencarian
+        if ($request->search) {
+            $query->whereHas('surat', function ($q) use ($request) {
+                $q->where('perihal', 'like', "%{$request->search}%")
+                  ->orWhere('no_surat', 'like', "%{$request->search}%");
+            })
+            ->orWhereHas('keUser', function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%"); // Cari berdasarkan nama bawahan
+            });
+        }
+
+        return Inertia::render('disposisi/outgoing', [
+            'disposisis' => $query->paginate(10)->withQueryString(),
+            'filters' => $request->only(['search'])
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $disposisi = Disposisi::findOrFail($id);
+
+        // Validasi: Hanya boleh hapus punya sendiri
+        if ($disposisi->dari_user_id !== auth()->id()) {
+            return redirect()->back()->withErrors(['error' => 'Anda tidak berhak menghapus disposisi ini.']);
+        }
+
+        // Validasi: Hanya boleh hapus jika bawahan BELUM menindaklanjuti
+        if (in_array($disposisi->status_disposisi, ['tindak_lanjut', 'selesai'])) {
+             return redirect()->back()->withErrors(['error' => 'Gagal! Bawahan sudah mengerjakan tugas ini.']);
+        }
+
+        $disposisi->delete();
+
+        return redirect()->back()->with('success', 'Disposisi berhasil ditarik.');
+    }
 }

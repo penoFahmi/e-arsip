@@ -14,4 +14,5 @@ export interface UserData {
 export interface BidangOption {
     id: number;
     nama_bidang: string;
+    is_group: boolean;
 }

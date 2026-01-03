@@ -16,7 +16,7 @@ import {
     SidebarMenuSubButton,
     SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { resolveUrl } from "@/lib/utils";
+import { resolveUrl, cn } from "@/lib/utils";
 import { type NavItem } from "@/types";
 import { Link, usePage } from "@inertiajs/react";
 
@@ -25,15 +25,20 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
 
     return (
         <SidebarGroup>
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
+            <SidebarGroupLabel>Menu Utama</SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) => {
+                    const isUrlActive = (href: string) => {
+                         if (href === '#' || href === '') return false;
+                         return page.url.startsWith(resolveUrl(href));
+                    }
+
                     const hasSubMenu = item.items && item.items.length > 0;
-                    const isUrlActive = (href: string) =>
-                        page.url.startsWith(resolveUrl(href));
                     const isSubMenuActive = hasSubMenu && item.items?.some(subItem =>
                         isUrlActive(subItem.href)
                     );
+
+                    const activeClass = "bg-blue-50 text-blue-700 font-medium hover:bg-blue-100 hover:text-blue-800 dark:bg-blue-900/40 dark:text-blue-300";
 
                     if (hasSubMenu) {
                         return (
@@ -47,7 +52,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                     <CollapsibleTrigger asChild>
                                         <SidebarMenuButton
                                             tooltip={item.title}
-                                            isActive={isSubMenuActive}
+                                            className={cn(isSubMenuActive && activeClass)}
                                         >
                                             {item.icon && <item.icon />}
                                             <span>{item.title}</span>
@@ -56,18 +61,21 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                     </CollapsibleTrigger>
                                     <CollapsibleContent>
                                         <SidebarMenuSub>
-                                            {item.items?.map((subItem) => (
-                                                <SidebarMenuSubItem key={subItem.title}>
-                                                    <SidebarMenuSubButton
-                                                        asChild
-                                                        isActive={isUrlActive(subItem.href)}
-                                                    >
-                                                        <Link href={subItem.href}>
-                                                            <span>{subItem.title}</span>
-                                                        </Link>
-                                                    </SidebarMenuSubButton>
-                                                </SidebarMenuSubItem>
-                                            ))}
+                                            {item.items?.map((subItem) => {
+                                                 const isChildActive = isUrlActive(subItem.href);
+                                                 return (
+                                                    <SidebarMenuSubItem key={subItem.title}>
+                                                        <SidebarMenuSubButton
+                                                            asChild
+                                                            className={cn(isChildActive && "font-medium text-blue-600 bg-transparent")}
+                                                        >
+                                                            <Link href={subItem.href}>
+                                                                <span>{subItem.title}</span>
+                                                            </Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                )
+                                            })}
                                         </SidebarMenuSub>
                                     </CollapsibleContent>
                                 </SidebarMenuItem>
@@ -75,12 +83,14 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                         );
                     }
 
+                    const isActive = isUrlActive(item.href);
+
                     return (
                         <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton
                                 asChild
-                                isActive={isUrlActive(item.href)}
                                 tooltip={item.title}
+                                className={cn(isActive && activeClass)}
                             >
                                 <Link href={item.href} prefetch>
                                     {item.icon && <item.icon />}

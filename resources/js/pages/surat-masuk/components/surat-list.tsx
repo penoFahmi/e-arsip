@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { Eye, Pencil, Trash2, Send, Calendar, Printer, FileText, Paperclip, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { SuratData } from '../types';
+import { toast } from 'sonner';
 
 interface Props {
     data: SuratData[];
@@ -19,6 +20,44 @@ interface Props {
 }
 
 export default function SuratList({ data, onEdit, onDelete, onDisposisi }: Props) {
+    const { auth } = usePage<any>().props;
+    const currentUser = auth.user;
+
+    // [HELPER] Cek apakah user punya hak disposisi (Untuk HIDE tombol)
+    const canDisposisi = ['level_1', 'level_2', 'level_3', 'super_admin'].includes(currentUser.role);
+
+    const checkPermission = (surat: SuratData, action: 'edit' | 'delete' | 'disposisi') => {
+
+        // 1. DISPOSISI: Double check (meskipun tombol sudah di-hide)
+        if (action === 'disposisi') {
+            if (canDisposisi) return true;
+
+            toast.error("Akses Ditolak!", {
+                description: "Hanya Pejabat Struktural yang dapat melakukan disposisi.",
+            });
+            return false;
+        }
+
+        // 2. SUPER ADMIN: Bebas
+        if (currentUser.role === 'super_admin') return true;
+
+        // 3. PEMILIK SURAT: Bebas Edit/Hapus
+        if (surat.id_user_input === currentUser.id) return true;
+
+        // 4. ADMIN BIDANG: Bebas di Bidangnya
+        if (currentUser.role === 'admin_bidang') return true;
+
+        // 5. PEJABAT (Kaban/Kabid) tapi BUKAN pemilik: TOLAK EDIT/HAPUS
+        if (currentUser.role === 'level_1' || currentUser.role === 'level_2') {
+            toast.error("Akses Ditolak!", {
+                description: "Pejabat hanya boleh mendisposisi. Perbaikan data harap hubungi Admin.",
+            });
+            return false;
+        }
+
+        toast.error("Akses Dibatasi", { description: "Anda hanya dapat mengubah surat buatan sendiri." });
+        return false;
+    };
 
     const getSifatBadge = (sifat: string) => {
         switch (sifat) {
@@ -99,12 +138,19 @@ export default function SuratList({ data, onEdit, onDelete, onDisposisi }: Props
 
                                 <TableCell className="align-top text-right">
                                     <div className="flex justify-end gap-1">
-                                        <Button
-                                            variant="outline" size="icon" className="h-8 w-8 text-blue-600 border-blue-200 hover:bg-blue-50"
-                                            onClick={() => onDisposisi(surat)} title="Disposisi"
-                                        >
-                                            <Send className="h-3.5 w-3.5" />
-                                        </Button>
+                                        {/* LOGIC HIDE: Hanya Muncul Jika Pejabat */}
+                                        {canDisposisi && (
+                                            <Button
+                                                variant="outline" size="icon"
+                                                className="h-8 w-8 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                                onClick={() => {
+                                                    if (checkPermission(surat, 'disposisi')) onDisposisi(surat);
+                                                }}
+                                                title="Disposisi"
+                                            >
+                                                <Send className="h-3.5 w-3.5" />
+                                            </Button>
+                                        )}
 
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
@@ -119,15 +165,17 @@ export default function SuratList({ data, onEdit, onDelete, onDisposisi }: Props
                                                     </Link>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem asChild>
-                                                     <a href={`/surat-masuk/${surat.id}/cetak-disposisi`} target="_blank" className="cursor-pointer">
+                                                    <a href={`/surat-masuk/${surat.id}/cetak-disposisi`} target="_blank" className="cursor-pointer">
                                                         <Printer className="mr-2 h-3.5 w-3.5" /> Cetak Lembar Disposisi
                                                     </a>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem onClick={() => onEdit(surat)} className="cursor-pointer">
+
+                                                {/* Edit & Delete tetap pakai checkPermission saat diklik */}
+                                                <DropdownMenuItem onClick={() => { if(checkPermission(surat, 'edit')) onEdit(surat) }} className="cursor-pointer">
                                                     <Pencil className="mr-2 h-3.5 w-3.5" /> Edit Data
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => onDelete(surat.id)} className="text-red-600 focus:text-red-600 cursor-pointer">
+                                                <DropdownMenuItem onClick={() => { if(checkPermission(surat, 'delete')) onDelete(surat.id) }} className="text-red-600 focus:text-red-600 cursor-pointer">
                                                     <Trash2 className="mr-2 h-3.5 w-3.5" /> Hapus Surat
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
@@ -140,6 +188,7 @@ export default function SuratList({ data, onEdit, onDelete, onDisposisi }: Props
                 </Table>
             </div>
 
+            {/* --- TAMPILAN MOBILE --- */}
             <div className="flex flex-col gap-3 md:hidden">
                 {data.map((surat) => (
                     <Card key={surat.id} className="border-l-4 border-l-blue-600 shadow-sm overflow-hidden relative">
@@ -160,22 +209,22 @@ export default function SuratList({ data, onEdit, onDelete, onDisposisi }: Props
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-48">
                                         <DropdownMenuItem asChild>
-                                             <a href={`/surat-masuk/${surat.id}/cetak-disposisi`} target="_blank" className="cursor-pointer">
+                                            <a href={`/surat-masuk/${surat.id}/cetak-disposisi`} target="_blank" className="cursor-pointer">
                                                 <Printer className="mr-2 h-3.5 w-3.5" /> Cetak Disposisi
                                             </a>
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem onClick={() => onEdit(surat)} className="cursor-pointer">
+                                        <DropdownMenuItem onClick={() => { if(checkPermission(surat, 'edit')) onEdit(surat) }} className="cursor-pointer">
                                             <Pencil className="mr-2 h-3.5 w-3.5" /> Edit Data
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => onDelete(surat.id)} className="text-red-600 focus:text-red-600 cursor-pointer">
+                                        <DropdownMenuItem onClick={() => { if(checkPermission(surat, 'delete')) onDelete(surat.id) }} className="text-red-600 focus:text-red-600 cursor-pointer">
                                             <Trash2 className="mr-2 h-3.5 w-3.5" /> Hapus Surat
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
 
-                            <div className="mt-2 pr-6"> 
+                            <div className="mt-2 pr-6">
                                 <h4 className="text-sm font-bold text-gray-900 leading-tight line-clamp-2">
                                     {surat.perihal}
                                 </h4>
@@ -201,9 +250,19 @@ export default function SuratList({ data, onEdit, onDelete, onDisposisi }: Props
                         </CardContent>
 
                         <CardFooter className="p-2 bg-gray-50 flex justify-between gap-2 border-t">
-                             <Button variant="outline" size="sm" className="h-8 text-xs flex-1 bg-white border-blue-200 text-blue-700 hover:bg-blue-50" onClick={() => onDisposisi(surat)}>
-                                <Send className="mr-1.5 h-3 w-3" /> Disposisi
-                            </Button>
+                            {/* LOGIC HIDE MOBILE JUGA */}
+                            {canDisposisi ? (
+                                <Button variant="outline" size="sm" className="h-8 text-xs flex-1 bg-white border-blue-200 text-blue-700 hover:bg-blue-50"
+                                    onClick={() => {
+                                        if (checkPermission(surat, 'disposisi')) onDisposisi(surat);
+                                    }}>
+                                    <Send className="mr-1.5 h-3 w-3" /> Disposisi
+                                </Button>
+                            ) : (
+                                // Spacer biar tombol Detail tetap di kanan kalau tombol Disposisi hilang
+                                <div className="flex-1"></div>
+                            )}
+
                             <Button variant="ghost" size="sm" className="h-8 text-xs flex-1" asChild>
                                 <Link href={`/surat-masuk/${surat.id}`}>Lihat Detail</Link>
                             </Button>

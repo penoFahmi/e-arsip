@@ -15,7 +15,12 @@ class SuratKeluarController extends Controller
     // Tampilkan Daftar Surat Keluar
     public function index(Request $request)
     {
+        $user = auth()->user();
         $query = SuratKeluar::with(['user', 'bidang'])->latest('tgl_surat');
+        $isSekretariat = $user->bidang && $user->bidang->kode === 'SEK';
+        if (!($user->role === 'super_admin' || $user->role === 'level_1' || $isSekretariat)) {
+            $query->where('id_bidang', $user->id_bidang);
+        }
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {

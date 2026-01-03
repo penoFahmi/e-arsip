@@ -27,21 +27,24 @@ class LaporanController extends Controller
             'tgl_akhir' => 'required|date|after_or_equal:tgl_awal',
         ]);
 
-        $surats = SuratMasuk::with('bidangPenerima')
+        $surats = SuratMasuk::with(['bidangPenerima', 'disposisi.keUser'])
             ->whereBetween('tgl_terima', [$request->tgl_awal, $request->tgl_akhir])
             ->orderBy('tgl_terima', 'asc')
             ->orderBy('no_agenda', 'asc')
             ->get();
 
-        // Ambil nama instansi dari setting (opsional, fallback ke string)
-        $instansi = AppSetting::where('key', 'instansi_name')->value('value') ?? 'BADAN KEUANGAN DAN ASET DAERAH';
+        $settings = AppSetting::pluck('value', 'key')->toArray();
 
-        // Return View Blade untuk dicetak Browser (Ctrl+P)
+        $config = [
+            'instansi_nama'   => $settings['instansi_name'] ?? 'PEMERINTAH DAERAH',
+            'instansi_alamat' => $settings['instansi_alamat'] ?? 'Alamat Belum Diatur',
+        ];
+
         return view('cetak.agenda-masuk', [
-            'surats' => $surats,
-            'tgl_awal' => Carbon::parse($request->tgl_awal)->translatedFormat('d F Y'),
+            'surats'    => $surats,
+            'tgl_awal'  => Carbon::parse($request->tgl_awal)->translatedFormat('d F Y'),
             'tgl_akhir' => Carbon::parse($request->tgl_akhir)->translatedFormat('d F Y'),
-            'instansi' => $instansi,
+            'config'    => $config,
         ]);
     }
 
@@ -51,15 +54,24 @@ class LaporanController extends Controller
 
     public function cetakDisposisi(SuratMasuk $suratMasuk)
     {
-        $suratMasuk->load(['disposisi.dariUser', 'disposisi.keUser']);
+        $suratMasuk->load(['disposisi.dariUser', 'disposisi.keUser', 'bidangPenerima']);
 
         $settings = AppSetting::pluck('value', 'key')->toArray();
 
-        $pdf = Pdf::loadView('pdf.lembar-disposisi', [
-            'surat' => $suratMasuk,
-            'config' => $settings
-        ])->setPaper('a4', 'portrait');
+        $config = [
+            'instansi_nama'   => $settings['instansi_name'] ?? 'PEMERINTAH DAERAH',
+            'instansi_alamat' => $settings['instansi_alamat'] ?? 'Alamat Instansi Belum Diatur',
 
+            'label_level_1'   => $settings['label_level_1'] ?? 'Sekretaris-Kasubbag Umum',
+            'label_level_2'   => $settings['label_level_2'] ?? 'Kepala Badan',
+            'label_level_3'   => $settings['label_level_3'] ?? 'Kepala Bidang',
+        ];
+
+        $pdf = Pdf::loadView('pdf.lembar-disposisi', [
+            'surat'  => $suratMasuk,
+            'config' => $config
+        ])->setPaper('a4', 'portrait');
+        
         $safeAgenda = str_replace('/', '-', $suratMasuk->no_agenda);
         $fileName = 'Disposisi-' . $safeAgenda . '.pdf';
 

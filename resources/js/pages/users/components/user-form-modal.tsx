@@ -34,7 +34,7 @@ export default function UserFormModal({ isOpen, onClose, editingData, bidangs, r
         role: 'staf',
         id_bidang: '',
         jabatan: '',
-        no_hp: '',  
+        no_hp: '',
         status_aktif: true,
     });
 
@@ -80,6 +80,7 @@ export default function UserFormModal({ isOpen, onClose, editingData, bidangs, r
             case 'super_admin': return 'Akses penuh ke seluruh sistem & pengaturan.';
             case 'level_1': return 'Pimpinan Tertinggi (Kepala Badan). Disposisi ke Level 2.';
             case 'level_2': return 'Sekretaris/Kabid. Menerima disposisi Kaban & meneruskan ke Kasi.';
+            case 'admin_bidang': return 'Admin Bidan. yang mengurus surat di bidang';
             case 'level_3': return 'Kasubbag/Kasi. Pelaksana teknis & memimpin staf.';
             case 'staf': return 'User biasa. Hanya bisa melihat surat masuk & disposisi ke dirinya.';
             default: return '';
@@ -148,6 +149,7 @@ export default function UserFormModal({ isOpen, onClose, editingData, bidangs, r
                                         <option value="super_admin">Super Admin (IT)</option>
                                         <option value="level_1">{roleLabels['label_level_1'] || 'Level 1'}</option>
                                         <option value="level_2">{roleLabels['label_level_2'] || 'Level 2'}</option>
+                                        <option value="admin_bidang">{roleLabels['label_admin_bidang'] || 'Admin Bidang'}</option>
                                         <option value="level_3">{roleLabels['label_level_3'] || 'Level 3'}</option>
                                         <option value="staf">Staf (Pelaksana)</option>
                                     </select>
