@@ -17,17 +17,18 @@ interface Bawahan {
     role: string;
 }
 
+// [PERBAIKAN 1] Tambahkan parentDisposisiId di Props
 interface Props {
     isOpen: boolean;
     onClose: () => void;
     surat: SuratData | null;
+    parentDisposisiId?: number | null;
 }
 
-export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
+export default function DisposisiModal({ isOpen, onClose, surat, parentDisposisiId }: Props) {
     const [bawahanList, setBawahanList] = useState<Bawahan[]>([]);
     const [isLoadingBawahan, setIsLoadingBawahan] = useState(false);
 
-    // Template instruksi cepat
     const quickInstructions = [
         "Mohon ditindaklanjuti",
         "Untuk diketahui",
@@ -38,25 +39,29 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
         "Arsipkan",
     ];
 
+    // [PERBAIKAN 2] Tambahkan field parent_id di useForm
     const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         id_surat: '',
-        parent_id: '', // Menampung ID disposisi sebelumnya (jika berantai)
+        parent_id: '', // <--- INI KUNCINYA
         ke_user_id: '',
         sifat_disposisi: 'biasa',
         instruksi: '',
         batas_waktu: '',
     });
 
-    // EFFECT: Saat Modal Dibuka
     useEffect(() => {
         if (isOpen && surat) {
             clearErrors();
             reset();
 
-            // Set ID Surat
-            setData('id_surat', String(surat.id));
+            // [PERBAIKAN 3] Set Parent ID jika ada (Estafet)
+            setData(prev => ({
+                ...prev,
+                id_surat: String(surat.id),
+                parent_id: parentDisposisiId ? String(parentDisposisiId) : '',
+            }));
 
-            // [LOGIC PINTAR] Ambil Data Bawahan Sesuai Jabatan User Login
+            // Ambil Data Bawahan
             setIsLoadingBawahan(true);
             fetch('/api/users/bawahan')
                 .then((res) => res.json())
@@ -70,7 +75,7 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                     setIsLoadingBawahan(false);
                 });
         }
-    }, [isOpen, surat]);
+    }, [isOpen, surat, parentDisposisiId]); // Jangan lupa dependency
 
     const addInstruction = (text: string) => {
         const current = data.instruksi;
@@ -108,15 +113,17 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                     </div>
                 </DialogHeader>
 
-                {/* Info Surat Singkat */}
                 <div className="bg-muted/30 p-3 rounded-md border border-dashed text-xs text-muted-foreground mb-2">
                     <p><span className="font-semibold text-foreground">Perihal:</span> {surat?.perihal}</p>
-                    <p className="mt-1"><span className="font-semibold text-foreground">Pengirim:</span> {surat?.pengirim}</p>
+                    {parentDisposisiId && (
+                        <div className="mt-1 text-blue-600 font-semibold flex items-center gap-1">
+                            <Sparkles className="h-3 w-3" /> Melanjutkan Disposisi Sebelumnya (Estafet)
+                        </div>
+                    )}
                 </div>
 
                 <form onSubmit={submit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                        {/* DROPDOWN TUJUAN (BAWAHAN) */}
                         <div className="space-y-2 col-span-2 md:col-span-1">
                             <Label>Tujuan Disposisi <span className="text-red-500">*</span></Label>
                             <div className="relative">
@@ -141,7 +148,6 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                             </div>
                             <InputError message={errors.ke_user_id} />
 
-                            {/* Alert jika tidak punya bawahan */}
                             {!isLoadingBawahan && bawahanList.length === 0 && (
                                 <p className="text-[10px] text-orange-600 mt-1 flex items-center gap-1">
                                     <AlertCircle className="h-3 w-3" />
@@ -150,7 +156,6 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                             )}
                         </div>
 
-                        {/* SIFAT DISPOSISI */}
                         <div className="space-y-2 col-span-2 md:col-span-1">
                             <Label>Sifat Instruksi</Label>
                             <select
@@ -167,7 +172,6 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                         </div>
                     </div>
 
-                    {/* TEXTAREA INSTRUKSI */}
                     <div className="space-y-2">
                         <Label className="flex justify-between items-center">
                             Isi Instruksi <span className="text-red-500">*</span>
@@ -181,7 +185,6 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                             placeholder="Ketik instruksi manual disini..."
                         />
 
-                        {/* TAG CEPAT */}
                         <div className="flex flex-wrap gap-1.5 mt-2">
                             <span className="text-[10px] text-muted-foreground flex items-center gap-1 mr-1">
                                 <Sparkles className="h-3 w-3 text-yellow-500" /> Isi Cepat:
@@ -200,7 +203,6 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                         <InputError message={errors.instruksi} />
                     </div>
 
-                    {/* BATAS WAKTU */}
                     <div className="space-y-2">
                         <Label className="flex items-center gap-2">
                             Batas Waktu Penyelesaian <span className="text-xs text-muted-foreground font-normal">(Opsional)</span>
@@ -213,7 +215,6 @@ export default function DisposisiModal({ isOpen, onClose, surat }: Props) {
                         />
                     </div>
 
-                    {/* WARNING JIKA SANGAT SEGERA */}
                     {data.sifat_disposisi === 'sangat_segera' && (
                         <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 text-xs rounded-md border border-red-200 animate-pulse">
                             <AlertCircle className="h-4 w-4" />

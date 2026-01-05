@@ -15,12 +15,14 @@ import SuratKeluarUploadModal from './components/surat-keluar-upload-modal';
 interface Props extends PageProps {
     surats: { data: SuratKeluarData[]; links: any[] };
     users: UserLite[];
-    bidangs: BidangOption[];
-    filters: { search: string };
+    bidangs: { id: number; nama_bidang: string }[];
+    filters: { search: string; bidang: string };
+    canFilterBidang: boolean;
 }
 
-export default function SuratKeluarIndex({ surats, filters }: Props) {
+export default function SuratKeluarIndex({ surats, filters, bidangs, canFilterBidang }: Props) {
     const [search, setSearch] = useState(filters.search || '');
+    const [selectedBidang, setSelectedBidang] = useState(filters.bidang || '');
 
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingData, setEditingData] = useState<SuratKeluarData | null>(null);
@@ -32,6 +34,15 @@ export default function SuratKeluarIndex({ surats, filters }: Props) {
         if (e.key === 'Enter') {
             router.get('/surat-keluar', { search }, { preserveState: true });
         }
+    };
+    const handleFilter = (key: string, value: string) => {
+        router.get('/surat-keluar',
+            {
+                search: key === 'search' ? value : search,
+                bidang: key === 'bidang' ? value : selectedBidang
+            },
+            { preserveState: true, preserveScroll: true }
+        );
     };
 
     const openCreate = () => {
@@ -71,6 +82,22 @@ export default function SuratKeluarIndex({ surats, filters }: Props) {
                             Kelola nomor surat keluar dan upload bukti tanda terima pengiriman.
                         </p>
                     </div>
+
+                    {canFilterBidang && (
+                        <select
+                            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm max-w-[150px]"
+                            value={selectedBidang}
+                            onChange={(e) => {
+                                setSelectedBidang(e.target.value);
+                                handleFilter('bidang', e.target.value);
+                            }}
+                        >
+                            <option value="">Semua Bidang</option>
+                            {bidangs.map(b => (
+                                <option key={b.id} value={b.id}>{b.nama_bidang}</option>
+                            ))}
+                        </select>
+                    )}
 
                     <div className="flex w-full md:w-auto items-center gap-2">
                         <div className="relative w-full md:w-64">

@@ -12,24 +12,27 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('agenda', function (Blueprint $table) {
-            $table->id(); // id_agenda
+            $table->id();
             $table->foreignId('id_surat')
                 ->nullable()
                 ->constrained('surat_masuk')
-                ->cascadeOnUpdate()
                 ->nullOnDelete();
+
+            $table->foreignId('id_bidang')
+                ->nullable()
+                ->constrained('bidang');
+
             $table->string('judul_agenda');
+            $table->text('deskripsi')->nullable();
             $table->string('lokasi')->nullable();
+
             $table->date('tgl_mulai');
             $table->date('tgl_selesai')->nullable();
             $table->time('jam_mulai')->nullable();
             $table->time('jam_selesai')->nullable();
+            $table->string('warna_label')->default('#3b82f6');
             $table->foreignId('penanggung_jawab')
-                ->nullable()
-                ->constrained('users')
-                ->cascadeOnUpdate()
-                ->nullOnDelete();
-            $table->text('keterangan')->nullable();
+                ->constrained('users');
             $table->timestamps();
         });
     }

@@ -13,21 +13,21 @@ class Agenda extends Model
 
     protected $fillable = [
         'id_surat',
+        'id_bidang',
         'judul_agenda',
+        'deskripsi',
         'lokasi',
         'tgl_mulai',
         'tgl_selesai',
         'jam_mulai',
         'jam_selesai',
+        'warna_label',
         'penanggung_jawab',
-        'keterangan',
     ];
 
     protected $casts = [
         'tgl_mulai'   => 'date',
         'tgl_selesai' => 'date',
-        'jam_mulai'   => 'datetime:H:i',
-        'jam_selesai' => 'datetime:H:i',
     ];
 
     public function surat()
@@ -35,7 +35,12 @@ class Agenda extends Model
         return $this->belongsTo(SuratMasuk::class, 'id_surat');
     }
 
-    public function penanggungJawab()
+    public function bidang()
+    {
+        return $this->belongsTo(Bidang::class, 'id_bidang');
+    }
+
+    public function user()
     {
         return $this->belongsTo(User::class, 'penanggung_jawab');
     }

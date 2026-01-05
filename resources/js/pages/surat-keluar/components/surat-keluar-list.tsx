@@ -27,7 +27,7 @@ export default function SuratKeluarList({ data, onEdit, onDelete, onUploadBukti 
     };
 
     if (data.length === 0) {
-        return <div className="p-8 text-center text-muted-foreground border rounded-xl bg-background">Belum ada surat keluar.</div>;
+        return <div className="p-8 text-center text-muted-foreground border rounded-xl bg-background">Belum ada arsip surat keluar.</div>;
     }
 
     return (
@@ -51,7 +51,7 @@ export default function SuratKeluarList({ data, onEdit, onDelete, onUploadBukti 
                                         {surat.no_agenda}
                                     </div>
                                     <div className="text-[10px] text-gray-400 mt-1">
-                                        {surat.no_surat || 'No. Surat Belum Ada'}
+                                        {surat.no_surat || 'No. Surat -'}
                                     </div>
                                 </TableCell>
 
@@ -72,41 +72,9 @@ export default function SuratKeluarList({ data, onEdit, onDelete, onUploadBukti 
                                 </TableCell>
 
                                 <TableCell className="text-right align-top">
-                                    <div className="flex justify-end gap-1">
-                                        {/* Jika status DRAFT: Bisa Edit & Hapus */}
-                                        {surat.status_surat === 'draft' && (
-                                            <>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onEdit(surat)} title="Edit Draft">
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => onDelete(surat.id)} title="Hapus">
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </>
-                                        )}
+                                    <div className="flex justify-end gap-1 items-center">
 
-                                        {/* Jika status KIRIM: Tombol Upload Bukti (Kamera) */}
-                                        {surat.status_surat === 'kirim' && (
-                                            <Button
-                                                variant="default"
-                                                size="sm"
-                                                className="h-8 text-xs bg-orange-500 hover:bg-orange-600"
-                                                onClick={() => onUploadBukti(surat)}
-                                            >
-                                                <Camera className="h-3.5 w-3.5 mr-1" /> Bukti Sampai
-                                            </Button>
-                                        )}
-
-                                        {/* Jika status DITERIMA: Tombol Lihat Bukti */}
-                                        {surat.status_surat === 'diterima' && surat.file_bukti && (
-                                            <Button variant="outline" size="sm" className="h-8 text-xs text-green-700 border-green-200 bg-green-50" asChild>
-                                                <a href={`/storage/${surat.file_bukti}`} target="_blank">
-                                                    <CheckCircle className="h-3.5 w-3.5 mr-1" /> Lihat Tanda Terima
-                                                </a>
-                                            </Button>
-                                        )}
-
-                                        {/* File Surat Asli (PDF) jika ada */}
+                                        {/* FILE SURAT ASLI (PDF) */}
                                         {surat.file_surat && (
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500" asChild>
                                                 <a href={`/storage/${surat.file_surat}`} target="_blank" title="Lihat Surat Asli">
@@ -114,6 +82,40 @@ export default function SuratKeluarList({ data, onEdit, onDelete, onUploadBukti 
                                                 </a>
                                             </Button>
                                         )}
+
+                                        {/* EDIT: Muncul jika belum diterima (Masih Draft/Kirim) */}
+                                        {surat.status_surat !== 'diterima' && (
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onEdit(surat)} title="Edit Data">
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                        )}
+
+                                        {/* UPLOAD BUKTI: Khusus status Kirim */}
+                                        {surat.status_surat === 'kirim' && (
+                                            <Button
+                                                variant="default"
+                                                size="sm"
+                                                className="h-8 text-xs bg-orange-500 hover:bg-orange-600 px-2"
+                                                onClick={() => onUploadBukti(surat)}
+                                            >
+                                                <Camera className="h-3.5 w-3.5 mr-1" /> Bukti
+                                            </Button>
+                                        )}
+
+                                        {/* LIHAT BUKTI: Khusus status Diterima */}
+                                        {surat.status_surat === 'diterima' && surat.file_bukti && (
+                                            <Button variant="outline" size="sm" className="h-8 text-xs text-green-700 border-green-200 bg-green-50 px-2" asChild>
+                                                <a href={`/storage/${surat.file_bukti}`} target="_blank">
+                                                    <CheckCircle className="h-3.5 w-3.5 mr-1" /> Lihat
+                                                </a>
+                                            </Button>
+                                        )}
+
+                                        {/* HAPUS: Muncul di SEMUA status (Untuk Admin/Pemilik hapus salah upload) */}
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => onDelete(surat.id)} title="Hapus Arsip">
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -144,24 +146,26 @@ export default function SuratKeluarList({ data, onEdit, onDelete, onUploadBukti 
                         </CardContent>
 
                         <CardFooter className="p-3 bg-gray-50 flex justify-end gap-2 border-t">
-                            {surat.status_surat === 'draft' ? (
-                                <>
-                                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => onEdit(surat)}>Edit</Button>
-                                    <Button variant="ghost" size="sm" className="h-7 text-xs text-red-600" onClick={() => onDelete(surat.id)}>Hapus</Button>
-                                </>
-                            ) : surat.status_surat === 'kirim' ? (
-                                <Button size="sm" className="h-8 w-full bg-orange-500 hover:bg-orange-600" onClick={() => onUploadBukti(surat)}>
+                            {/* Logic Mobile sama dengan Desktop */}
+
+                            {surat.status_surat !== 'diterima' && (
+                                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => onEdit(surat)}>
+                                    <Pencil className="h-4 w-4 text-blue-600" />
+                                </Button>
+                            )}
+
+                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 border-red-200" onClick={() => onDelete(surat.id)}>
+                                <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+
+                            {surat.status_surat === 'kirim' ? (
+                                <Button size="sm" className="h-8 flex-1 bg-orange-500 hover:bg-orange-600 text-xs" onClick={() => onUploadBukti(surat)}>
                                     <Camera className="mr-2 h-4 w-4" /> Upload Bukti
                                 </Button>
-                            ) : (
-                                // Diterima
-                                <div className="flex gap-2 w-full">
-                                    {surat.file_bukti && (
-                                        <Button variant="outline" size="sm" className="flex-1 h-8 text-xs border-green-300 text-green-700" asChild>
-                                            <a href={`/storage/${surat.file_bukti}`} target="_blank">Bukti</a>
-                                        </Button>
-                                    )}
-                                </div>
+                            ) : surat.status_surat === 'diterima' && surat.file_bukti && (
+                                <Button variant="outline" size="sm" className="h-8 flex-1 text-xs border-green-300 text-green-700" asChild>
+                                    <a href={`/storage/${surat.file_bukti}`} target="_blank">Lihat Bukti</a>
+                                </Button>
                             )}
                         </CardFooter>
                     </Card>

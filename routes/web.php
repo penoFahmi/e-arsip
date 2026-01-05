@@ -13,6 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DisposisiController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\SuratKeluarController;
+use App\Http\Controllers\AgendaController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -28,11 +29,11 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::get('/surat-masuk/{suratMasuk}/cetak-disposisi', [LaporanController::class, 'cetakDisposisi'])->name('surat.print_disposisi');
+    Route::get('/laporan/surat-masuk', [LaporanController::class, 'indexMasuk'])->name('laporan.masuk');
+    Route::get('/laporan/surat-masuk/cetak', [LaporanController::class, 'cetakMasuk']);
 
-    Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
-    Route::get('/laporan/cetak', [LaporanController::class, 'cetak'])->name('laporan.cetak');
-    Route::get('laporan/agenda-surat-masuk', [LaporanController::class, 'index'])->name('laporan.agenda-surat-masuk');
-
+    Route::get('/laporan/surat-keluar', [LaporanController::class, 'indexKeluar'])->name('laporan.keluar');
+    Route::get('/laporan/surat-keluar/cetak', [LaporanController::class, 'cetakKeluar']);
     Route::get('/api/users/bawahan', [UserController::class, 'getBawahan']);
 
     Route::middleware([ForceChangeDefaultEmail::class])->group(function () {
@@ -56,6 +57,14 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/settings/app', [AppSettingController::class, 'update'])->name('settings.app.update');
             Route::get('/settings/disposisi', [AppSettingController::class, 'editDisposisi'])->name('settings.disposisi');
             Route::post('/settings/disposisi', [AppSettingController::class, 'updateDisposisi']);
+
+            Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda.index');
+            Route::post('/agenda', [AgendaController::class, 'store'])->name('agenda.store');
+            Route::put('/agenda/{agenda}', [AgendaController::class, 'update'])->name('agenda.update');
+            Route::delete('/agenda/{agenda}', [AgendaController::class, 'destroy'])->name('agenda.destroy');
+
+            Route::get('/agenda/kalender', [AgendaController::class, 'calendarPage'])->name('agenda.calendar.page');
+            Route::get('/api/agenda/events', [AgendaController::class, 'calendarData'])->name('agenda.api.events');
         });
     });
 });

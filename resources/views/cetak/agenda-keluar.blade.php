@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Agenda Surat Masuk</title>
+    <title>Agenda Surat Keluar</title>
     <style>
         body { font-family: Arial, sans-serif; font-size: 10pt; }
         h3 { text-align: center; margin: 0; text-transform: uppercase; font-weight: bold; }
@@ -15,42 +15,38 @@
 </head>
 <body onload="window.print()">
 
-    <h3>AGENDA SURAT MASUK TAHUN {{ date('Y') }}</h3>
-    <p>Periode: {{ $periode }}</p>
+    <h3>AGENDA SURAT KELUAR TAHUN {{ date('Y') }}</h3>
+    <p>{{ $bidang_nama }} | Periode: {{ $periode }}</p>
 
     <table>
         <thead>
             <tr>
                 <th width="5%">No</th>
                 <th width="20%">Nomor / Tanggal Surat</th>
-                <th width="20%">Asal Surat</th>
+                <th width="15%">Asal Surat</th>
                 <th width="35%">Perihal Surat</th>
-                <th width="20%">Disposisi</th>
+                <th width="25%">Disposisi</th>
+                {{-- Di Word Surat Keluar, kolom 'Disposisi' berisi TUJUAN surat (misal: U/ Kepala BAPPEDA) --}}
             </tr>
         </thead>
         <tbody>
             @forelse($surats as $index => $surat)
             <tr>
-                <td class="text-center">{{ $index + 1 }}</td>
+                <td class="text-center">{{ $index + 1 }}.</td>
                 <td>
-                    {{-- Format Word: Nomor dulu baru tanggal --}}
-                    {{ $surat->no_surat }} <br>
+                    {{ $surat->no_surat ?? $surat->no_agenda }} <br>
                     <span style="color: #555; font-size: 9pt;">
                         {{ \Carbon\Carbon::parse($surat->tgl_surat)->translatedFormat('d F Y') }}
                     </span>
                 </td>
-                <td>{{ $surat->pengirim }}</td>
+                <td>
+                    {{-- Asal Surat Keluar = Bidang Pengirim --}}
+                    {{ $surat->bidang ? $surat->bidang->nama_bidang : 'Sekretariat' }}
+                </td>
                 <td>{{ $surat->perihal }}</td>
                 <td>
-                    {{-- LOGIKA BARU: Tampilkan Nama User Penerima Disposisi --}}
-                    @php
-                        // Ambil semua penerima disposisi, gabungkan dengan koma
-                        $penerima = $surat->disposisi->map(function($d) {
-                            return $d->keUser ? ($d->keUser->jabatan ?? $d->keUser->name) : null;
-                        })->filter()->implode(', ');
-                    @endphp
-
-                    {{ $penerima ?: '-' }}
+                    {{-- Di format Word, kolom paling kanan ini berisi Tujuan --}}
+                    {{ $surat->tujuan }}
                 </td>
             </tr>
             @empty

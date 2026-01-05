@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import InputError from '@/components/input-error';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Send, FileText, CheckCircle } from 'lucide-react';
+import { Send, FileText, Upload } from 'lucide-react';
 import { SuratKeluarData } from '../types';
 
 interface Props {
@@ -22,8 +22,8 @@ export default function SuratKeluarFormModal({ isOpen, onClose, editingData }: P
         tujuan: '',
         perihal: '',
         sifat_surat: 'biasa',
-        no_surat: '',
-        status_surat: 'draft',
+        no_surat: '', // Kolom ini dibuka sejak awal
+        status_surat: 'diterima', // Default langsung "Diterima/Selesai" karena surat sudah jadi
         file_surat: null as File | null,
     });
 
@@ -43,6 +43,7 @@ export default function SuratKeluarFormModal({ isOpen, onClose, editingData }: P
                 });
             } else {
                 reset();
+                // Default tanggal hari ini
                 setData('tgl_surat', new Date().toISOString().split('T')[0]);
             }
         }
@@ -50,9 +51,15 @@ export default function SuratKeluarFormModal({ isOpen, onClose, editingData }: P
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        const options = { onSuccess: onClose, forceFormData: true };
+
+        // Gunakan post dengan forceFormData agar file terkirim
+        const options = {
+            onSuccess: onClose,
+            forceFormData: true
+        };
 
         if (editingData) {
+            // Khusus Inertia kalau upload file di PUT harus pakai trik _method: put
             router.post(`/surat-keluar/${editingData.id}`, { _method: 'put', ...data }, options);
         } else {
             post('/surat-keluar', options);
@@ -65,26 +72,32 @@ export default function SuratKeluarFormModal({ isOpen, onClose, editingData }: P
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Send className="h-5 w-5 text-orange-500" />
-                        {editingData ? 'Edit Data Surat Keluar' : 'Booking Nomor Surat'}
+                        {editingData ? 'Edit Arsip Surat Keluar' : 'Input Arsip Surat Keluar'}
                     </DialogTitle>
                     <DialogDescription>
-                        {editingData
-                            ? "Lengkapi nomor surat definitif dan upload scan surat asli sebelum dikirim."
-                            : "Isi data awal untuk mendapatkan Nomor Agenda secara otomatis."}
+                        Masukkan data surat yang sudah selesai dibuat/dikirim untuk pengarsipan.
                     </DialogDescription>
                 </DialogHeader>
 
                 <form onSubmit={submit} className="space-y-6 py-4">
 
+                    {/* DATA UTAMA */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
                             <Label>Tanggal Surat</Label>
                             <Input type="date" value={data.tgl_surat} onChange={e => setData('tgl_surat', e.target.value)} required />
                             <InputError message={errors.tgl_surat} />
                         </div>
+
                         <div className="space-y-1">
-                            <Label>Kode Klasifikasi</Label>
-                            <Input placeholder="Contoh: 005" value={data.kode_klasifikasi} onChange={e => setData('kode_klasifikasi', e.target.value)} />
+                            <Label>Nomor Surat (Definitif)</Label>
+                            <Input
+                                placeholder="Nomor Surat Lengkap (Contoh: 800/123/BKAD)"
+                                value={data.no_surat}
+                                onChange={e => setData('no_surat', e.target.value)}
+                                required // Wajib diisi karena surat sudah jadi
+                            />
+                            <InputError message={errors.no_surat} />
                         </div>
 
                         <div className="space-y-1 md:col-span-2">
@@ -100,6 +113,11 @@ export default function SuratKeluarFormModal({ isOpen, onClose, editingData }: P
                         </div>
 
                         <div className="space-y-1">
+                            <Label>Kode Klasifikasi (Opsional)</Label>
+                            <Input placeholder="Contoh: 005" value={data.kode_klasifikasi} onChange={e => setData('kode_klasifikasi', e.target.value)} />
+                        </div>
+
+                        <div className="space-y-1">
                             <Label>Sifat Surat</Label>
                             <select className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
                                 value={data.sifat_surat} onChange={e => setData('sifat_surat', e.target.value as any)}>
@@ -110,47 +128,33 @@ export default function SuratKeluarFormModal({ isOpen, onClose, editingData }: P
                         </div>
                     </div>
 
-                    {editingData && (
-                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-4 animate-in slide-in-from-bottom-2">
-                            <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 border-b pb-2">
-                                <CheckCircle className="h-4 w-4" /> Finalisasi Surat
-                            </div>
+                    {/* FILE UPLOAD SEKARANG LANGSUNG MUNCUL */}
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-2">
+                        <Label className="flex items-center gap-2">
+                            <Upload className="h-4 w-4" /> Upload Scan Surat (PDF/JPG)
+                        </Label>
+                        <Input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg"
+                            onChange={e => setData('file_surat', e.target.files?.[0] || null)}
+                            className="bg-white"
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                            Upload file surat asli yang sudah bertanda tangan & stempel.
+                        </p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <Label>No. Surat Definitif</Label>
-                                    <Input placeholder="Nomor lengkap di kop surat" value={data.no_surat} onChange={e => setData('no_surat', e.target.value)} />
-                                </div>
-
-                                <div className="space-y-1">
-                                    <Label>Status Surat</Label>
-                                    <select className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-                                        value={data.status_surat} onChange={e => setData('status_surat', e.target.value as any)}>
-                                        <option value="draft">Draft (Konsep)</option>
-                                        <option value="kirim">Siap Dikirim (Ekspedisi)</option>
-                                        <option value="diterima">Selesai (Diterima)</option>
-                                    </select>
-                                </div>
-
-                                <div className="space-y-1 md:col-span-2">
-                                    <Label>Upload Scan Surat Asli (PDF)</Label>
-                                    <div className="flex gap-2">
-                                        <Input type="file" accept=".pdf,.jpg" onChange={e => setData('file_surat', e.target.files?.[0] || null)} className="bg-white" />
-                                    </div>
-                                    {editingData.file_surat && !data.file_surat && (
-                                        <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
-                                            <FileText className="h-3 w-3" /> Sudah ada file arsip.
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                        {editingData?.file_surat && !data.file_surat && (
+                            <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                                <FileText className="h-3 w-3" /> File arsip sudah ada sebelumnya.
+                            </p>
+                        )}
+                        <InputError message={errors.file_surat} />
+                    </div>
 
                     <DialogFooter>
                         <Button type="button" variant="secondary" onClick={onClose}>Batal</Button>
                         <Button type="submit" disabled={processing} className="bg-orange-600 hover:bg-orange-700">
-                            {editingData ? 'Simpan Perubahan' : 'Booking Nomor'}
+                            {editingData ? 'Simpan Perubahan' : 'Simpan Arsip'}
                         </Button>
                     </DialogFooter>
                 </form>
